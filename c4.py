@@ -18,6 +18,8 @@ board_red_qubits = np.zeros((7, 6))
 
 red_turn = True
 
+board = np.zeros((7,6))
+
 def get_pos(col, row):
     return (start_grid + col * grid_width + 5, 0 + row * grid_width + 5)
 
