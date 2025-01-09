@@ -319,9 +319,10 @@ def do_turn():
             color = "Y"
             if (i-collapses)%2==0: color = "R"
             move = color + str(((i-collapses)//2)+1)
-            superposition_moves.update({move: i})
 
             distribution:list[float] = event["distribution"]
+            if not any([distribution[j] >= 0.999 for j in range(7)]): # this is a classical move
+                superposition_moves.update({move: i})
             for current_board in current_possible_boards:
                 for j in range(7):
                         if distribution[j] == 0:
@@ -450,6 +451,9 @@ def do_turn():
             nodes = [board for board in all_boards if board.layer == i]
             for board in nodes:
                 child_board = board.make_child(1)
+            superposition_moves.pop(collapse_turn)
+            
+        # all options exhausted
         
         else:
             raise KeyError("RIP")
