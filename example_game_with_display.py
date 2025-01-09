@@ -38,12 +38,12 @@ def updateCanvas()->None:
             w.create_oval(offx, offy, offx + grid_width - 10, offy + grid_width - 10, fill="#fff", outline="#faa")
     # draw expectation values
     current_boards:list[Board] = flatten_nested_list(master_board.traverse(i+1))
-    print("I have found the following boards to use for displaying")
-    for board in current_boards:
-        print("probability", board.get_total_probability())
-        board.draw()
-        print("--------------------")
-    print("Making frame")
+    # print("I have found the following boards to use for displaying")
+    # for board in current_boards:
+    #     print("probability", board.get_total_probability())
+    #     board.draw()
+    #     print("--------------------")
+    # print("Making frame")
     columns = [0,1,2,3,4,5,6]
     rows = [0,1,2,3,4,5]
     for row,column in product(rows,columns):
@@ -71,22 +71,6 @@ def updateCanvas()->None:
 
 def on_place_click(event):
     global i
-    # global red_turn, start_grid, get_pos
-    # col = math.floor((event.x - start_grid) / grid_width)
-
-    # if col < 0 or col > 7:
-    #     return
-    
-    # for i in range(6):
-    #     if board[col][5 - i] == 0.:
-    #         board[col][5 - i] = 1 if red_turn else 2
-    #         offx, offy = get_pos(col, 5 - i)
-    #         w.create_oval(offx, offy, offx + grid_width - 10, offy + grid_width - 10, fill="#f00" if red_turn else "#ff0", outline="#faa")
-    #         red_turn = not red_turn
-    #         check_win()
-    #         break
-    #     if i == 5:
-    #         print("no space")
     do_turn()
     updateCanvas()
     i+=1
