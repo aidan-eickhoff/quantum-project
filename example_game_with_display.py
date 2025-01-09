@@ -61,8 +61,8 @@ def updateCanvas()->None:
         offx, offy = get_pos(column,row)
         # change colour based on the probability of each color
         start_angle = 0
-        redangle = expectation_red * 360
-        yellow_angle = expectation_yellow * 360
+        redangle = expectation_red * 359 # 359 looks better than 360
+        yellow_angle = expectation_yellow * 359
         # yellow_final = redangle + yellow_angle
         w.create_arc(offx,offy, offx + grid_width - 10, offy + grid_width - 10, fill="#f00", outline="#faa",start=0,extent=redangle,style=tkinter.PIESLICE)
     
@@ -286,9 +286,13 @@ class Board:
         print(" 0  1  2  3  4  5  6 ")  # Column numbers for reference
 
     def remove_child(self, child):
-        # child.kill_children()
+        prob = child.probability
+        probability_multiplication_factor = 1/(1-prob)
         self.child_boards.remove(child)
-        # del child
+        if not len(self.child_boards) == 0:
+            # add a bit of probability to all options
+            for children in self.child_boards:
+                 children.probability *= probability_multiplication_factor
 
     
 
@@ -448,9 +452,9 @@ def run_game():
 
                 if not is_valid:
                     previous_board.parent.remove_child(previous_board)
-                else:
+                # else:
                      # this is only for the blocks that have entanglement with them
-                    previous_board.probability = 1.0 # idk if this works, just try numbers and check
+                    # previous_board.probability = 1.0 # idk if this works, just try numbers and check
                 # TODO adjust probabilities
                 # we need to basically copy all of the last nodes ( or think of a better solution)
             all_boards = master_board.list_all_children_and_self([])
