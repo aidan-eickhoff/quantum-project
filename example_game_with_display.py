@@ -59,7 +59,7 @@ def updateCanvas()->None:
                      expectation_red += board.get_total_probability()
                 else: # the chip is yellow
                     expectation_yellow+=board.get_total_probability()
-        offx, offy = get_pos(column,row)
+        offx, offy = get_pos(column,5 - row)
         # change colour based on the probability of each color
         start_angle = 0
         redangle = expectation_red * 359 # 359 looks better than 360
@@ -321,7 +321,7 @@ def do_turn():
             move = color + str(((i-collapses)//2)+1)
 
             distribution:list[float] = event["distribution"]
-            if not any([distribution[j] >= 0.999 for j in range(7)]): # this is a classical move
+            if not any([distribution[j] >= 0.999 for j in range(7)]): # this is a classical
                 superposition_moves.update({move: i})
             for current_board in current_possible_boards:
                 for j in range(7):
