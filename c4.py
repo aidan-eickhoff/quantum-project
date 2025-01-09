@@ -13,9 +13,6 @@ w.create_rectangle(0, 0, cw, ch, fill="#faa", outline="#faa")
 start_grid = (cw / 2 - (ch * 7 / 12))
 grid_width =  ch / 6
 
-board_yellow_qubits = np.zeros((7, 6))
-board_red_qubits = np.zeros((7, 6))
-
 red_turn = True
 
 board = np.zeros((7,6))
