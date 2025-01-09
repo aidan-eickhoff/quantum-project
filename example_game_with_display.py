@@ -19,7 +19,8 @@ grid_width =  ch / 6
 
 red_turn = True
 
-board = np.zeros((7,6))
+# board = np.zeros((7,6))
+moves = []
 
 
 def get_pos(col, row):
@@ -88,6 +89,11 @@ def check_win():
             if row < 3 and col > 2 and board[col][row] == board[col - 1][row + 1] == board[col - 2][row + 2] == board[col - 3][row + 3] != 0:
                 print("winner " + ("red" if board[col][row] == 1 else "yellow"))
             
+
+
+def add_move():
+    pass
+    # moves.append({something based on uyser input})
 
 
 w.pack()
@@ -291,178 +297,6 @@ def flatten_nested_list(nested_list):
     return result
 
 
-def run_game():
-    i = 0
-    # NOTE There is NO input validation. 
-    events = [R1,Y1,R2,Y2,CollapseR1,R3,CollapseY1,Y3,R4,Y4,CollapseR3,R5,Y5,CollapseR4,R6,Y6,R7,Y7,CollapseR6,R8,Y8,R9,Y9,R10,Y10,R11,Y11,R12,Y12,R13,CollapseR12]
-    collapses = 0
-    master_board = Board()
-    superposition_moves = {} # we need to keep track of which superposition moves have been played. So we know how to entangle
-    while True:
-        print("[DEBUG] superposition moves observed: ", superposition_moves)
-        event:dict = events[i]
-        current_possible_boards:list[Board] = master_board.traverse(depth=i)
-        current_possible_boards = flatten_nested_list(current_possible_boards)
-        print("[DEBUG] number of current possible boards: ", len(current_possible_boards))
-        if event["type"] == "superposition":
-            
-            # update superposition moves
-            color = "Y"
-            if (i-collapses)%2==0: color = "R"
-            move = color + str(((i-collapses)//2)+1)
-            superposition_moves.update({move: i})
-
-            distribution:list[float] = event["distribution"]
-            for current_board in current_possible_boards:
-                for j in range(7):
-                        if distribution[j] == 0:
-                            continue # continue for next of this for loop
-                        # determine to which height the chip will fall
-                        height:int = 0 # array indices must be ints
-                        while height<=6:
-                            if current_board.board[j][height] == None:
-                                break
-                            else:
-                                height += 1
-                        # we have found the correct spot. Now we add the chip in a child
-                        child_board = current_board.make_child(probability=distribution[j])
-                        color = "Y"
-                        if (i-collapses)%2==0: color = "R"
-                        move = color + str(((i-collapses)//2)+1)
-                        child_board.board[j][height] = Chip(color,move)
-        elif event["type"] == "entanglement":
-        # an example:
-# R2 = {"type": "entanglement",
-#       "entangled with": "Y1", # entanglement type needs a move to entangle with. This move HAS to be a superposition move
-#       "distribution": [None,None,None,4,3,None,None] # distribution of the entanglement.
-#       # If the superposition move is in column 4, then this move will be in column 5.
-#       # If the superposition move is in column 5, then this move will be in column 4
-#       # None means that it is not valid. The superposition move cannot be in column 3 or 6 for example, it has a zero probability of being there
-# }
-            old_move = event["entangled with"] # example; Y1
-            old_move_number:int = superposition_moves[old_move] # example 1
-            distribution = event["distribution"] # example [0,0,0,4,3,0,0]
-            for j in range(7):
-                if distribution[j] is None:
-                    continue
-                # we want to place a chip of our color at this column (still have to find height) IF the chip on the old turn ended up going into slot distribution[j]
-                # first grep aka grab all boards at level old_move_number
-                old_move_states = master_board.traverse(depth = old_move_number+1) # optimisation idea; we can cache this; off by errer hahahahahaahah 
-                old_move_states = flatten_nested_list(old_move_states)
-
-                # filter for the boardstates where the chip actually ended up in the specified column
-                column_to_checks = distribution[j] # might be a list of multiple numbers
-
-                if type(column_to_checks) != list:
-                     column_to_checks = [column_to_checks]
-
-                for column_to_check in column_to_checks:
-                    for state in old_move_states:
-                        # print("[DEBUG] Currently analysing board " , state.draw())
-                        # print(f"[DEBUG] Hoping to find {old_move} at index {column_to_check}")
-                        # get height
-                        height = 5
-                        while height >= 0:
-                                if state.board[column_to_check][height] is not None:
-                                        break
-                                height -= 1
-                        if height == -1:
-                                # print("[DEBUG] faillure 1")
-                                continue
-                        # we found the top chip in this column of this board state, lets check if it's from this turn
-                        coin:Chip = state.board[column_to_check][height] 
-                        if not coin.move == old_move:
-                             #faillure
-                        #      print("[DEBUG] faillure 2")
-                             continue
-                        
-                        # print("[DEBUG] succes")
-                        # then only do the following for the boardstates where the chip actually ended up in the specified column
-                        # just go to all available ends from this point on forward
-                        offset = i - old_move_number # this is how many steps along the tree we need to take to get to where we are NOW, like now now ( at i )
-
-                        # we have all satisfactory old boards in old_boards_filtered:list[Board]
-                        # we need to fast-foward them all to where we are now
-                        # They could have multiple branches
-                        fastforwarded_boards = []
-                        fastforwarded_boards.append(state.traverse(offset - 1))
-
-                        # what if the player tries to react to a move that is never played? or if a player doest make a reaction to a move that is played? NOTE NO input validation
-                        
-                                
-                        #fastforwarded_bopards might have a structure like [elem,[elem,[elem]]]. Transform it to [elem,elem,elem]
-                        current_boards = flatten_nested_list(fastforwarded_boards)
-                        # play the chip at index j (find the height first, at the start of this step)
-                        for current_board in current_boards:
-                        # find height
-                                height:int = 0 # array indices must be ints
-                                while height<=6:
-                                        if current_board.board[j][height] == None:
-                                                break
-                                        else:
-                                                height += 1
-                                # we have found the correct spot. Now we add the chip in a child
-                                child_board = current_board.make_child(probability=1)
-                                color = "Y"
-                                if (i-collapses)%2==0: color = "R"
-                                move = color + str(((i-collapses)//2)+1)
-                                child_board.board[j][height] = Chip(color,move)
-                                # print("[DEBUG] Added child with board  ")
-                                # print(child_board.draw())
-
-        elif event["type"] == "collapse":
-            collapses+=1
-            # example
-#CollapseR1 = {"type": "collapse",
-#              "Final position": 4, # this is the index of the final position of the chip
-#              "collapse turn": "R1"
-#}
-            collapse_turn:str = event["collapse turn"] # for example R1
-            collapse_turn_number:int = superposition_moves[event["collapse turn"]] # for example 0
-            previous_boards:list[Board] = flatten_nested_list(master_board.traverse(collapse_turn_number+1))
-            resulting_column:int = event["Final position"]
-            
-            # we need to prune the tree; cut off a certain branch
-            # we look for bad branches, aka branches with the wrong result
-            for previous_board in previous_boards:
-                # print("[DEBUG] collapse Analysing")
-                # previous_board.draw()
-                is_valid = False
-                for cell in previous_board.board[resulting_column]:
-                     if cell is not None:
-                          if cell.move == collapse_turn:
-                               is_valid = True
-                # previous_board is a bad branch
-
-                if not is_valid:
-                    previous_board.parent.remove_child(previous_board)
-                # else:
-                     # this is only for the blocks that have entanglement with them
-                    # previous_board.probability = 1.0 # idk if this works, just try numbers and check
-                # TODO adjust probabilities
-                # we need to basically copy all of the last nodes ( or think of a better solution)
-            all_boards = master_board.list_all_children_and_self([])
-            nodes = [board for board in all_boards if board.layer == i]
-            for board in nodes:
-                child_board = board.make_child(1)
-        
-        else:
-             raise KeyError("RIP")
-        all_boards:list[Board] = master_board.list_all_children_and_self([])
-        for board in all_boards:
-        #     print(type(board))
-            if board.layer == i+1: # fkin off by 1 error /j
-                print("----------------------------------------")
-                board.draw()
-                print("the layer of this board is: ", board.layer)
-                print("Probability of this board is: ", board.get_total_probability())
-            
-        print("----------------------------------------")
-        print("----------------------------------------")
-        i+=1
-# run_game()
-
-
 events = [R1,Y1,R2,Y2,CollapseR1,R3,CollapseY1,Y3,R4,Y4,CollapseR3,R5,Y5,CollapseR4,R6,Y6,R7,Y7,CollapseR6,R8,Y8,R9,Y9,R10,Y10,R11,Y11,R12,Y12,R13,CollapseR12]
 global collapses
 collapses = 0
@@ -611,15 +445,14 @@ def do_turn():
 
                 if not is_valid:
                     previous_board.parent.remove_child(previous_board)
-                # TODO adjust probabilities
-                # we need to basically copy all of the last nodes ( or think of a better solution)
+            # we need to basically copy all of the last nodes ( or think of a better solution)
             all_boards = master_board.list_all_children_and_self([])
             nodes = [board for board in all_boards if board.layer == i]
             for board in nodes:
                 child_board = board.make_child(1)
         
         else:
-             raise KeyError("RIP")
+            raise KeyError("RIP")
         all_boards:list[Board] = master_board.list_all_children_and_self([])
         for board in all_boards:
         #     print(type(board))
