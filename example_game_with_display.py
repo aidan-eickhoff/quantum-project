@@ -17,10 +17,6 @@ w.create_rectangle(0, 0, cw, ch, fill="#faa", outline="#faa")
 start_grid = (cw / 2 - (ch * 7 / 12))
 grid_width =  ch / 6
 
-red_turn = True
-
-# board = np.zeros((7,6))
-moves = []
 
 
 def get_pos(col, row):
@@ -39,15 +35,10 @@ def updateCanvas()->None:
             w.create_oval(offx, offy, offx + grid_width - 10, offy + grid_width - 10, fill="#fff", outline="#faa")
     # draw expectation values
     current_boards:list[Board] = flatten_nested_list(master_board.traverse(i+1))
-    # print("I have found the following boards to use for displaying")
-    # for board in current_boards:
-    #     print("probability", board.get_total_probability())
-    #     board.draw()
-    #     print("--------------------")
-    # print("Making frame")
+
     columns = [0,1,2,3,4,5,6]
     rows = [0,1,2,3,4,5]
-    for row,column in product(rows,columns):
+    for row,column in product(rows,columns): # itertools.product is used to loop over all 42 cells
         expectation_red = 0
         expectation_yellow = 0
         for board in current_boards:
@@ -64,36 +55,43 @@ def updateCanvas()->None:
         start_angle = 0
         redangle = expectation_red * 359 # 359 looks better than 360
         yellow_angle = expectation_yellow * 359
-        # yellow_final = redangle + yellow_angle
-        w.create_arc(offx,offy, offx + grid_width - 10, offy + grid_width - 10, fill="#f00", outline="#faa",start=0,extent=redangle,style=tkinter.PIESLICE)
-    
-        w.create_arc(offx,offy, offx + grid_width - 10, offy + grid_width - 10, fill="#ff0", outline="#faa",start=redangle,extent=yellow_angle,style=tkinter.PIESLICE)
+        # draw red part
+        # dont draw if there is no probability otherwise is looks like shit
+        if not redangle == 0:
+            if redangle >= 359 - 0.0001: # if its full, draw an oval, it looks better
+                w.create_oval(offx, offy, offx + grid_width - 10, offy + grid_width - 10, fill="#f00", outline="#faa")
+            else:
+                w.create_arc(offx,offy, offx + grid_width - 10, offy + grid_width - 10, fill="#f00", outline="#faa",start=0,extent=redangle,style=tkinter.PIESLICE)
+        # draw yellow part
+        if not yellow_angle == 0:
+            if yellow_angle >= 359 - 0.0001: # take into account floating point saus
+                w.create_oval(offx, offy, offx + grid_width - 10, offy + grid_width - 10, fill="#ff0", outline="#faa")
+            else:
+                w.create_arc(offx,offy, offx + grid_width - 10, offy + grid_width - 10, fill="#ff0", outline="#faa",start=redangle,extent=yellow_angle,style=tkinter.PIESLICE)
 
 
 def on_place_click(event):
-    global i
+    global i, game_length
+    if i == game_length:
+        print("Game is done!")
+        return
     do_turn()
     updateCanvas()
     i+=1
 
-def check_win():
-    global board
-    for col in range(0, 7):
-        for row in range(0, 6):
-            if row < 3 and board[col][row] == board[col][row + 1] == board[col][row + 2] == board[col][row + 3] != 0:
-                print("winner " + ("red" if board[col][row] == 1 else "yellow"))
-            if col < 4 and board[col][row] == board[col + 1][row] == board[col + 2][row] == board[col + 3][row] != 0:
-                print("winner " + ("red" if board[col][row] == 1 else "yellow"))
-            if row < 3 and col < 4 and board[col][row] == board[col + 1][row + 1] == board[col + 2][row + 2] == board[col + 3][row + 3] != 0:
-                print("winner " + ("red" if board[col][row] == 1 else "yellow"))
-            if row < 3 and col > 2 and board[col][row] == board[col - 1][row + 1] == board[col - 2][row + 2] == board[col - 3][row + 3] != 0:
-                print("winner " + ("red" if board[col][row] == 1 else "yellow"))
+# def check_win():
+#     global board
+#     for col in range(0, 7):
+#         for row in range(0, 6):
+#             if row < 3 and board[col][row] == board[col][row + 1] == board[col][row + 2] == board[col][row + 3] != 0:
+#                 print("winner " + ("red" if board[col][row] == 1 else "yellow"))
+#             if col < 4 and board[col][row] == board[col + 1][row] == board[col + 2][row] == board[col + 3][row] != 0:
+#                 print("winner " + ("red" if board[col][row] == 1 else "yellow"))
+#             if row < 3 and col < 4 and board[col][row] == board[col + 1][row + 1] == board[col + 2][row + 2] == board[col + 3][row + 3] != 0:
+#                 print("winner " + ("red" if board[col][row] == 1 else "yellow"))
+#             if row < 3 and col > 2 and board[col][row] == board[col - 1][row + 1] == board[col - 2][row + 2] == board[col - 3][row + 3] != 0:
+#                 print("winner " + ("red" if board[col][row] == 1 else "yellow"))
             
-
-
-def add_move():
-    pass
-    # moves.append({something based on uyser input})
 
 
 w.pack()
@@ -101,117 +99,196 @@ m.bind("<Button-1>", on_place_click)
 
 # end of canvas stuff
 
-
-R1 = {"type": "superposition",
+events_practicegame = [
+{"type": "superposition",
       "distribution": [0 , 0 , 0.34, 0.33, 0.33, 0 , 0] # distribution of the superposition. THere is a 33% chance of being in column 3, 4, or 5
-      }
-Y1 = {"type": "superposition",
+        },
+{"type": "superposition",
       "distribution": [0 , 0 , 0   , 0.5 , 0.5 , 0 , 0] # distribution of the superposition. THere is a 50% chance of being in column 4 or 5
-      }
-R2 = {"type": "entanglement",
+        },
+{"type": "entanglement",
       "entangled with": "Y1", # entanglement type needs a move to entangle with. This move HAS to be a superposition move
       "distribution": [None,None,None,4,3,None,None] # distribution of the entanglement.
       # If the superposition move is in column 4, then this move will be in column 5.
       # If the superposition move is in column 5, then this move will be in column 4
       # None means that it is not valid. The superposition move cannot be in column 3 or 6 for example, it has a zero probability of being there
-      }
-Y2 = {"type": "superposition", 
+        },
+{"type": "superposition", 
       "distribution": [0 , 0 , 1, 0,0,0,0] # this is a "classical" move
-    }
-CollapseR1 = {"type": "collapse",
+        },
+{"type": "collapse",
               "Final position": 4, # this is the index of the final position of the chip
               "collapse turn": "R1"
-    }
-R3 = {"type": "superposition",
+        },
+{"type": "superposition",
         "distribution": [0 , 0 , 0.5, 0.5, 0 , 0 , 0] # distribution of the superposition. THere is a 50% chance of being in column 3 or 4
-        }
-CollapseY1 = {"type": "collapse",
+        },
+{"type": "collapse",
                 "Final position": 4, # this is the index of the final position of the chip
                 "collapse turn": "Y1"
-    }
-Y3 = {"type": "entanglement",
+        },
+{"type": "entanglement",
         "entangled with": "R3", # entanglement type needs a move to entangle with. This move HAS to be a superposition move
         "distribution": [None,None,3,2,None,None,None] # distribution of the entanglement.
-        }
-R4 = {"type": "superposition",
+        },
+{"type": "superposition",
         "distribution": [0 , 0 , 0 , 0.5, 0 , 0.5 , 0]
-        }
-Y4 = {"type": "entanglement",
+        },
+{"type": "entanglement",
         "entangled with": "R4", # entanglement type needs a move to entangle with. This move HAS to be a superposition move
         "distribution": [None,None,None,None,3,5,None] # distribution of the entanglement.
-        }
-CollapseR3 = {"type": "collapse",
+        },
+{"type": "collapse",
                 "Final position": 3, # this is the index of the final position of the chip
                 "collapse turn": "R3"
-}
-R5 = {"type": "superposition",
+        },
+{"type": "superposition",
         "distribution": [0 , 0 , 1 , 0 , 0 , 0 , 0]
-        }
-Y5 = {"type": "entanglement",
+        },
+{"type": "entanglement",
         "entangled with": "R4",
         "distribution": [None,None,None,3,None,None,5] # distribution of the entanglement.
-        }
-CollapseR4 = {"type": "collapse",
+        },
+{"type": "collapse",
                 "Final position": 3, # this is the index of the final position of the chip
                 "collapse turn": "R4"
-}
-R6 = {"type": "superposition",
+        },
+{"type": "superposition",
         "distribution": [0 , 0.2 , 0.2 , 0.2 , 0.2 , 0.2 , 0]
-        }
-Y6 = {"type": "entanglement",
+        },
+{"type": "entanglement",
         "entangled with": "R6",
         "distribution": [None,None,5,None,[2,3],None,[1,4]] # distribution of the entanglement.
         # there should go a chip in index 2 if [5] is satisfied, that is, if the superposition move is in column with index 5
-        }
-R7 = {"type": "entanglement",
+        },
+{"type": "entanglement",
         "entangled with": "R6",
         "distribution": [None,[1,4],None,None,[2,3],5,None] # distribution of the entanglement.
-        }
-Y7 = {"type": "superposition",
+        },
+{"type": "superposition",
         "distribution": [0 , 0 , 1 , 0, 0 , 0 , 0]
-        }
-CollapseR6 = {"type": "collapse",
+        },
+{"type": "collapse",
                 "Final position": 2, # this is the index of the final position of the chip
                 "collapse turn": "R6"
-}
-R8 = {"type": "superposition",
+        },
+{"type": "superposition",
         "distribution": [0 , 1 , 0 , 0 , 0 , 0 , 0]
-        }
-Y8 = {"type": "superposition",
+        },
+{"type": "superposition",
         "distribution": [0 , 0 , 0 , 1 , 0 , 0 , 0]
-        }
-R9 = {"type": "superposition",
+        },
+{"type": "superposition",
         "distribution": [0 , 1 , 0 , 0 , 0 , 0 , 0]
-        }
-Y9 = {"type": "superposition",
-        "distribution": [0 , 0, 1 , 0 , 0 , 0 , 0]
-        }
-R10 = {"type": "superposition",
+        },
+{"type": "superposition",
+   "distribution": [0 , 0, 1 , 0 , 0 , 0 , 0]
+        },
+{"type": "superposition",
         "distribution": [0 , 1 , 0 , 0 , 0 , 0 , 0]
-        }
-Y10 = {"type": "superposition",
+        },
+{"type": "superposition",
         "distribution": [0 , 1 , 0 , 0 , 0 , 0 , 0]
-        }
-R11 = {"type": "superposition",
+        },
+{"type": "superposition",
         "distribution": [1 , 0 , 0 , 0 , 0 , 0 , 0]
-        }
-Y11 = {"type": "superposition",
+        },
+{"type": "superposition",
         "distribution": [0 , 0 , 0 , 0 , 0 , 1 , 0]
-        }
-R12 = {"type": "superposition",
+        },
+{"type": "superposition",
         "distribution": [0.5 , 0 , 0 , 0 , 0 , 0.5 , 0]
-        }
-Y12 = {"type": "entanglement",
+        },
+{"type": "entanglement",
         "entangled with": "R12",
         "distribution": [0,None,None,None,None,5,None]
-        }
-R13 = {"type": "superposition",
+        },
+{"type": "superposition",
         "distribution": [1 , 0 , 0 , 0 , 0 , 0 , 0]
-        }
-CollapseR12 = {"type": "collapse", 
+        },
+{"type": "collapse", 
                 "Final position": 5, # this is the index of the final position of the chip
                 "collapse turn": "R12"
-}
+},
+]
+
+# First Player can only use classical moves. Simple strategy for Player 2. You can change where the collapse goes to for different results
+events_example2 = [
+    {"type": "superposition",
+    "distribution": [0,0,0,1,0,0,0]},
+    {"type": "superposition",
+    "distribution": [0,0.25,0.25,0,0.25,0.25,0]},
+    {"type": "superposition",
+    "distribution": [0,1,0,0,0,0,0]},
+    {"type": "entanglement",
+    "entangled with": "Y1",
+    "distribution": [None,1,2,None,4,5,None]},
+    {"type": "superposition",
+      "distribution": [0,0,1,0,0,0,0]},
+    {"type": "entanglement",
+    "entangled with": "Y1",
+    "distribution": [None,1,2,None,4,5,None]},
+    {"type": "superposition",
+      "distribution": [0,0,0,0,1,0,0]},
+    {"type": "entanglement",
+    "entangled with": "Y1",
+    "distribution": [None,1,2,None,4,5,None]},
+    {"type": "collapse",
+     "Final position": 5, # must be in [1,2,4,5]
+     "collapse turn": "Y1"}
+]
+
+# First Player can only use classical moves. Intermediate strategy for Player 2. You can change where the collapse goes to for different results
+events_example3 = [
+    {"type": "superposition",
+    "distribution": [0,0,0,1,0,0,0]},
+    {"type": "superposition",
+    "distribution": [0.25,0.25,0,0,0,0.25,0.25]},
+    {"type": "superposition",
+    "distribution": [1,0,0,0,0,0,0]},
+    {"type": "entanglement",
+    "entangled with": "Y1",
+    "distribution": [0,1,None,None,None,5,6]}, # Player 2 tries to make a superposition of 4 stacks (vertically places 4 chips)
+    {"type": "superposition",
+      "distribution": [0,1,0,0,0,0,0]},
+    {"type": "entanglement",
+    "entangled with": "Y1",
+    "distribution": [0,1,None,None,None,5,6]},
+    {"type": "superposition",
+      "distribution": [0,0,0,0,0,1,0]},
+    {"type": "entanglement",
+    "entangled with": "Y1",
+    "distribution": [0,1,None,None,None,5,6]},
+    {"type": "collapse",
+     "Final position": 5, # must be in [0,1,5,6]
+     "collapse turn": "Y1"}
+]
+
+# First Player can only use classical moves. Advances strategy for Player 2. You can change where the collapse goes to for different results
+events_example4 = [
+    {"type": "superposition",
+    "distribution": [0,0,0,1,0,0,0]},
+    {"type": "superposition",
+    "distribution": [0.25,0.25,0,0,0,0.25,0.25]},
+    {"type": "superposition",
+    "distribution": [1,0,0,0,0,0,0]},
+    {"type": "entanglement",
+    "entangled with": "Y1", # Yellow (player 2) now nows that his stack in column 0/1 can not be finished. So if Y1 is in column 0/1, we should instead try to defend the rest of the position
+    "distribution": [None,1,0,None,None,5,6]},  # if Y1 is in column j, then we place at the index of the distribution list where j is in the list of values (or just the value as is the case here)
+    {"type": "superposition",
+      "distribution": [0,1,0,0,0,0,0]},
+    {"type": "entanglement",
+    "entangled with": "Y1",
+    "distribution": [None,None,1,0,None,5,6]},
+    {"type": "superposition",
+      "distribution": [0,0,0,0,0,1,0]},
+    {"type": "entanglement",
+    "entangled with": "Y1",
+    "distribution": [None,None,5,None,[0,1],None,6]},
+    {"type": "collapse",
+     "Final position": 1, # Final position must be element 0f [0,1,5,6]. Change it if you want
+     "collapse turn": "Y1"}
+]
 
 class Chip:
     def __init__(self, color:str, move:str):
@@ -296,10 +373,15 @@ def flatten_nested_list(nested_list):
             result.append(elem)  # Add non-list elements directly
     return result
 
+########################################################################################################
+# Pick your example:
+events = events_practicegame
+events = events_example2
+########################################################################################################
 
-events = [R1,Y1,R2,Y2,CollapseR1,R3,CollapseY1,Y3,R4,Y4,CollapseR3,R5,Y5,CollapseR4,R6,Y6,R7,Y7,CollapseR6,R8,Y8,R9,Y9,R10,Y10,R11,Y11,R12,Y12,R13,CollapseR12]
 global collapses
 collapses = 0
+game_length = len(events)
 master_board = Board()
 superposition_moves = {} # we need to keep track of which superposition moves have been played. So we know how to entangle
 i = 0
@@ -341,14 +423,7 @@ def do_turn():
                         move = color + str(((i-collapses)//2)+1)
                         child_board.board[j][height] = Chip(color,move)
         elif event["type"] == "entanglement":
-        # an example:
-# R2 = {"type": "entanglement",
-#       "entangled with": "Y1", # entanglement type needs a move to entangle with. This move HAS to be a superposition move
-#       "distribution": [None,None,None,4,3,None,None] # distribution of the entanglement.
-#       # If the superposition move is in column 4, then this move will be in column 5.
-#       # If the superposition move is in column 5, then this move will be in column 4
-#       # None means that it is not valid. The superposition move cannot be in column 3 or 6 for example, it has a zero probability of being there
-# }
+
             old_move = event["entangled with"] # example; Y1
             old_move_number:int = superposition_moves[old_move] # example 1
             distribution = event["distribution"] # example [0,0,0,4,3,0,0]
@@ -422,11 +497,7 @@ def do_turn():
 
         elif event["type"] == "collapse":
             collapses+=1
-            # example
-#CollapseR1 = {"type": "collapse",
-#              "Final position": 4, # this is the index of the final position of the chip
-#              "collapse turn": "R1"
-#}
+
             collapse_turn:str = event["collapse turn"] # for example R1
             collapse_turn_number:int = superposition_moves[event["collapse turn"]] # for example 0
             previous_boards:list[Board] = flatten_nested_list(master_board.traverse(collapse_turn_number+1))
@@ -457,6 +528,8 @@ def do_turn():
         
         else:
             raise KeyError("RIP")
+        
+        # print all boards that are now possible
         all_boards:list[Board] = master_board.list_all_children_and_self([])
         for board in all_boards:
         #     print(type(board))
