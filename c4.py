@@ -28,11 +28,10 @@ class BoardState():
         self.last_collapsed_move = 0
         self.total_move_number = 0
         self.red_turn = True
+        self.num_shots = 4_096
 
     # add a classical piece to a column in a board_state (self.board if None is supplied)
-    def add_to_col(self, col: int, is_red:bool, curr_board: np.ndarray | None = None) -> np.ndarray:
-        if curr_board is None:
-            curr_board = self.board
+    def add_to_col(self, col: int, is_red:bool, curr_board: np.ndarray) -> np.ndarray:
         for row in range(6):
             if curr_board[col][5 - row] == 0.:
                 # 1 in array represents red, 2 represents yellow
@@ -68,8 +67,15 @@ class BoardState():
         new_board = self.collapse_moves(self.moves[self.last_collapsed_move:target_turn])
         self.last_collapsed_move = target_turn
         return new_board
+    
 
-
+    def estimate_evs(self) -> tuple[np.ndarray, np.ndarray]:
+        red_ev, yellow_ev = np.zeros((7, 6)), np.zeros((7, 6))
+        for i in range(0, self.num_shots):
+            board = self.collapse_moves(self.moves[self.last_collapsed_move:], starting_board=np.array(self.board))
+            red_ev += (board % 2) / self.num_shots
+            yellow_ev += np.floor(board / 2) / self.num_shots
+        return (red_ev, yellow_ev)
     # takes a list of moves and a starting board state -- if starting state is none use the board 
     # calculates the resulting collapsed state. If None supplied as starting state, auto-update game state
     def collapse_moves(self, moves: list, starting_board: np.ndarray|None = None) -> np.ndarray:
@@ -96,7 +102,15 @@ class BoardState():
                         count += move.distribution[col + 1]
                 # entanglement move logic
                 case "entanglement":
-                    entangled_col = move.mapping[prev_move_cols[move.linked_turn - self.last_collapsed_move]]
+                    try:
+                        entangled_col = move.mapping[prev_move_cols[move.linked_turn - self.last_collapsed_move]]
+                        prev_move_cols.append(0)
+                    except:
+                        print("Entanglement debug")
+                        print("linked turn" + str(move.linked_turn))
+                        print("last collapsed " + str(self.last_collapsed_move))
+                        print("move mapping " + str(move.mapping))
+                        print("prev move columns " + str(prev_move_cols))
                     curr_board = self.add_to_col(entangled_col, move.color, curr_board=curr_board)
                 case _:
                     print("ERROR")
@@ -112,6 +126,7 @@ class BoardState():
                 return
             self.moves.append(EntangleTurn(move_number=self.total_move_number, mapping=dist, linked_turn=target_turn, color=self.red_turn))
         self.red_turn = not self.red_turn
+        self.total_move_number += 1
 
 
 class tkinterHandler():
@@ -123,6 +138,9 @@ class tkinterHandler():
         self.input_text = tkinter.Text(self.main_window, height = 1, width = 40) 
         self.target_turn_number = tkinter.Text(self.main_window, height = 1, width = 4) 
         self.submit_button = tkinter.Button(self.main_window, text='Input move', command=self.add_move)
+        self.delete_button = tkinter.Button(self.main_window, text='remove last', command=self.removelast)
+        self.change_player = tkinter.Button(self.main_window, text='change player', command=self.changeplayer)
+
         # board size & place information
         self.board_width, self.board_height = 1280, 720
         self.start_board_x_pos = (self.board_width / 2 - (self.board_height * 7 / 12))
@@ -139,11 +157,21 @@ class tkinterHandler():
         self.input_text.pack() 
         self.target_turn_number.pack()
         self.submit_button.pack()
-
+        self.delete_button.pack()
+        self.change_player.pack()
         self.main_window.bind("a", self.collapse)
 
         self.board_state: BoardState = BoardState()
 
+    def removelast(self):
+        self.board_state.moves.pop()
+        self.board_state.total_move_number -= 1
+        self.update_evs()
+        print(self.board_state.moves)
+
+    def changeplayer(self):
+        self.board_state.red_turn = not self.board_state.red_turn
+        print("now player " + ("red " if self.board_state.red_turn else "yellow"))
 
     def show_window(self):
         self.main_window.mainloop()
@@ -164,21 +192,52 @@ class tkinterHandler():
             # superposition case
             case 0:
                 array = np.array(list(map(float, text_input.split(','))))
-                array *= 1 / np.sum(array)
+                array /= np.sum(array)
+                if len(array) > 7:
+                    print("illegal")
+                    return
                 self.board_state.add_move(array, False)
             # entanglement case
             case 1:
                 target_turn = int(self.target_turn_number.get(1.0, "end-1c"))
                 array = np.array(list(map(int, text_input.split(','))))
+                if len(array) > 7 or len(array[np.where(array >= 7)]) != 0:
+                    print("illegal")
+                    return
                 self.board_state.add_move(array, True, target_turn=target_turn)
+        print(self.board_state.total_move_number - 1)
+        self.update_evs()
+
+    def update_evs(self):
+        red_ev, yellow_ev = self.board_state.estimate_evs()
+        for col in range(0, 7):
+            for row in range(0, 6):
+                self.fill_piece(col, row, fill="#fff")
+                if 0. < (red_ev[col][row] + yellow_ev[col][row]) and red_ev[col][row] + 1e-3 < 1 and yellow_ev[col][row] + 1e-3 < 1:
+                    redangle = red_ev[col][row] * 359 # 359 looks better than 360
+                    yellow_angle = yellow_ev[col][row] * 359
+                    # yellow_final = redangle + yellow_angle
+                    offx, offy = self.get_pos(col, row)
+                    self.canvas.create_arc(offx, offy, offx + self.grid_width - 10, offy + self.grid_width - 10, fill="#f00", outline="", start=0,        extent=redangle,     style=tkinter.PIESLICE)
+                    self.canvas.create_arc(offx, offy, offx + self.grid_width - 10, offy + self.grid_width - 10, fill="#ff0", outline="", start=redangle, extent=yellow_angle, style=tkinter.PIESLICE)
+                elif red_ev[col][row] + 1e-3 >= 1.:
+                    self.fill_piece(col, row, fill="#f00")
+                elif yellow_ev[col][row] + 1e-3 >= 1.:
+                    self.fill_piece(col, row, fill="#ff0")
+
 
     def collapse(self, event):
         new_board = self.board_state.collapse_event()
+        if new_board is None:
+            return
         for col in range(0, 7):
             for row in range(0, 6):
-                if new_board[col][row] != 0:
-                    self.fill_piece(col, row, "#f00" if (new_board[col][row] == 1) else "#ff0")
+                color = "#f00" if (new_board[col][row] == 1) else ("#ff0" if new_board[col][row] == 2 else "#fff")
+                self.fill_piece(col, row, color)
+
         self.board_state.board = new_board
+        print(self.board_state.last_collapsed_move)
+
 
 
 
