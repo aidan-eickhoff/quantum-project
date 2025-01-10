@@ -2,6 +2,7 @@ import tkinter
 import numpy as np
 import math
 import random
+from coords_input import create_coords_inputs
 
 class Turn:
     def __init__(self, move_number, color):
@@ -23,15 +24,24 @@ class EntangleTurn(Turn):
         self.type = "entanglement"
 
 m = tkinter.Tk()
-m.resizable(False, False)
 
-cw, ch = 1280, 720
+#getting screen width and height of display
+width= m.winfo_screenwidth() 
+height= m.winfo_screenheight()
+#setting tkinter window size
+m.geometry("%dx%d" % (width, height))
+m.title("Qonnect 4")
+# m.resizable(False, False)
+
+cw, ch = 1280, 600
 
 w = tkinter.Canvas(m, width=cw, height=ch)
-w.create_rectangle(0, 0, cw, ch, fill="#faa", outline="#faa")
+w.create_rectangle(0, 0, width, height, fill="#faa", outline="#faa")
 
 input_move_type = tkinter.IntVar()
 move_type = tkinter.Checkbutton(m, text="Entanglement move", variable=input_move_type, onvalue=1, offvalue=0)
+coord_input_frame = tkinter.Frame()
+coord_inputs = create_coords_inputs(coord_input_frame)
 input_text = tkinter.Text(m, height = 1, width = 40) 
 target_turn_number = tkinter.Text(m, height = 1, width = 4) 
 
@@ -152,6 +162,7 @@ submit_button = tkinter.Button(m, text='Input move', command=add_move)
 w.pack()
 
 move_type.pack()
+coord_input_frame.pack()
 input_text.pack() 
 target_turn_number.pack()
 submit_button.pack()
