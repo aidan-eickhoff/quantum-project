@@ -1,7 +1,8 @@
 import tkinter
 import numpy as np
 import random
-from coords_input import create_coords_inputs
+from rotation_input import Rotation_input
+from input_panel import Input_panel
 
 class Turn:
     def __init__(self, move_number, color):
@@ -120,12 +121,13 @@ class tkinterHandler():
         self.main_window = tkinter.Tk()
         # Tkinter interactable widgets
         self.input_move_type = tkinter.IntVar()
-        self.move_type = tkinter.Checkbutton(self.main_window, text="Entanglement move", variable=self.input_move_type, onvalue=1, offvalue=0)
-        self.input_text = tkinter.Text(self.main_window, height = 1, width = 40) 
-        self.column_input_container = tkinter.Frame()
-        self.column_inputs = create_coords_inputs(self.column_input_container)
-        self.target_turn_number = tkinter.Text(self.main_window, height = 1, width = 4) 
-        self.submit_button = tkinter.Button(self.main_window, text='Input move', command=self.add_move)
+        # self.move_type = tkinter.Checkbutton(self.main_window, text="Entanglement move", variable=self.input_move_type, onvalue=1, offvalue=0)
+        # self.input_text = tkinter.Text(self.main_window, height = 1, width = 40) 
+        # self.column_input_container = tkinter.Frame()
+        # self.column_inputs = create_amplitudes_inputs(self.column_input_container)
+        # self.target_turn_number = tkinter.Text(self.main_window, height = 1, width = 4) 
+        # self.submit_button = tkinter.Button(self.main_window, text='Input move', command=self.add_move)
+
         # board size & place information
         self.board_width, self.board_height = 1280, 400
         self.start_board_x_pos = (self.board_width / 2 - (self.board_height * 7 / 12))
@@ -138,11 +140,12 @@ class tkinterHandler():
                 self.fill_piece(col, row, fill="#fff")
 
         self.canvas.pack()
-        self.move_type.pack()
-        self.column_input_container.pack()
-        self.input_text.pack() 
-        self.target_turn_number.pack()
-        self.submit_button.pack()
+        self.input_panel = Input_panel(self.main_window, self.add_move) #constructor performs .pack()
+        # self.move_type.pack()
+        # self.column_input_container.pack()
+        # self.input_text.pack() 
+        # self.target_turn_number.pack()
+        # self.submit_button.pack()
 
         self.main_window.bind("a", self.collapse)
 
@@ -163,12 +166,7 @@ class tkinterHandler():
 
 
     def add_move(self) -> BoardState:
-        probs = []
-        for input in self.column_inputs:
-            prob = input.get()
-            probs.append(prob)
-
-        text_input = self.input_text.get(1.0, "end-1c") 
+        text_input = self.input_panel.entanglement_input.get(1.0, "end-1c") 
         match self.input_move_type.get():
             # superposition case
             case 0:
