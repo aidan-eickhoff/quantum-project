@@ -376,7 +376,7 @@ def flatten_nested_list(nested_list):
 ########################################################################################################
 # Pick your example:
 events = events_practicegame
-events = events_example2
+# events = events_example4
 ########################################################################################################
 
 global collapses
