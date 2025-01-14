@@ -3,6 +3,7 @@ import numpy as np
 import random
 from rotation_input import Rotation_input
 from input_panel import Input_panel
+from bloch import BlochVisualizer
 
 class Turn:
     def __init__(self, move_number, color):
@@ -129,21 +130,12 @@ class tkinterHandler():
         # create drawable canvas
         self.canvas = tkinter.Canvas(self.main_window, width=self.board_width, height=self.board_height)
         self.canvas.create_rectangle(0, 0, self.board_width, self.board_height, fill="#faa", outline="#faa")
-        for col in range(0, 8):
-            for row in range(0, 7):
-                if col == 0 and row != 6:
-                    self.create_board_num(col, row, 6-row)
-                elif row == 6 and col != 0:
-                    self.create_board_num(col, row, col)
-                elif row == 6 and col == 0:
-                    continue
-                else:
-                    self.fill_piece(col, row, fill="#fff")
-
-        self.canvas.pack()
+        self.bloch_visualizer = BlochVisualizer(self.main_window) #constructor performs .pack()
         self.input_panel = Input_panel(self.main_window, self.add_move) #constructor performs .pack()
 
-        self.main_window.bind("a", self.collapse)
+        self.bloch_visualizer.container.pack(side=tkinter.LEFT)
+        self.input_panel.container.pack(side=tkinter.RIGHT)
+
 
         self.board_state: BoardState = BoardState()
 

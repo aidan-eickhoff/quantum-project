@@ -14,7 +14,8 @@ class Input_panel():
 
         # attributes for the diffrent move inputs, starts with rotate input
         self.superpos_input = Rotation_input(self.move_type_container)
-        self.entanglement_input = None
+        self.entanglement_input = CY_input(self.move_type_container)
+        self.entanglement_input.container.pack_forget() # hides CY input
 
         #switch move buttons
         self.move_select_container = tkinter.Frame(self.container, borderwidth=2, relief=tkinter.RIDGE)
@@ -30,20 +31,19 @@ class Input_panel():
         #submit_move button
         self.submit_button = tkinter.Button(self.container, text='Play move', command=add_move)
         self.submit_button.grid(row=1, columnspan=2, sticky="ew")
-        self.container.pack()
 
     def clear_input(self):
         for child in self.move_type_container.winfo_children():
-            child.destroy()
+            child.pack_forget()
     
     def show_superposition_inputs(self):
         self.move_type_superposition["state"] = "disabled"
         self.move_type_entanglement["state"] = "normal"
         self.clear_input()
-        self.superpos_input = Rotation_input(self.move_type_container)
+        self.superpos_input.container.pack()# = Rotation_input(self.move_type_container)
 
     def show_entanglement_inputs(self):
         self.move_type_entanglement["state"] = "disabled"
         self.move_type_superposition["state"] = "normal"
         self.clear_input()
-        self.entanglement_input = CY_input(self.move_type_container)
+        self.entanglement_input.container.pack() #= CY_input(self.move_type_container)
