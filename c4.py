@@ -121,31 +121,27 @@ class tkinterHandler():
         self.main_window = tkinter.Tk()
         # Tkinter interactable widgets
         self.input_move_type = tkinter.IntVar()
-        # self.move_type = tkinter.Checkbutton(self.main_window, text="Entanglement move", variable=self.input_move_type, onvalue=1, offvalue=0)
-        # self.input_text = tkinter.Text(self.main_window, height = 1, width = 40) 
-        # self.column_input_container = tkinter.Frame()
-        # self.column_inputs = create_amplitudes_inputs(self.column_input_container)
-        # self.target_turn_number = tkinter.Text(self.main_window, height = 1, width = 4) 
-        # self.submit_button = tkinter.Button(self.main_window, text='Input move', command=self.add_move)
 
         # board size & place information
-        self.board_width, self.board_height = 1280, 400
-        self.start_board_x_pos = (self.board_width / 2 - (self.board_height * 7 / 12))
-        self.grid_width =  self.board_height / 6
+        self.board_width, self.board_height = 1280, 480
+        self.start_board_x_pos = (self.board_width / 2 - (self.board_height * 8 / 12))
+        self.grid_width =  self.board_height / 7
         # create drawable canvas
         self.canvas = tkinter.Canvas(self.main_window, width=self.board_width, height=self.board_height)
         self.canvas.create_rectangle(0, 0, self.board_width, self.board_height, fill="#faa", outline="#faa")
-        for col in range(0, 7):
-            for row in range(0, 6):
-                self.fill_piece(col, row, fill="#fff")
+        for col in range(0, 8):
+            for row in range(0, 7):
+                if col == 0 and row != 6:
+                    self.create_board_num(col, row, 6-row)
+                elif row == 6 and col != 0:
+                    self.create_board_num(col, row, col)
+                elif row == 6 and col == 0:
+                    continue
+                else:
+                    self.fill_piece(col, row, fill="#fff")
 
         self.canvas.pack()
         self.input_panel = Input_panel(self.main_window, self.add_move) #constructor performs .pack()
-        # self.move_type.pack()
-        # self.column_input_container.pack()
-        # self.input_text.pack() 
-        # self.target_turn_number.pack()
-        # self.submit_button.pack()
 
         self.main_window.bind("a", self.collapse)
 
@@ -163,6 +159,10 @@ class tkinterHandler():
     def fill_piece(self, col: int, row: int, fill):
         offx, offy = self.get_pos(col, row)
         self.canvas.create_oval(offx, offy, offx + self.grid_width - 10, offy + self.grid_width - 10, fill=fill, outline="#faa")
+
+    def create_board_num(self, col: int, row: int, text):
+        offx, offy = self.get_pos(col, row)
+        self.canvas.create_text(offx + (self.grid_width - 10)/2, offy + (self.grid_width - 10)/2, text=text, font=('Helvetica 15 bold'))
 
 
     def add_move(self) -> BoardState:
