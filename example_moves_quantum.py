@@ -1,4 +1,4 @@
-import qiskit
+import qiskit.QuantumCircuit
 import math
 import numpy as np
 pi = math.pi
@@ -24,4 +24,6 @@ def set_vector_to_right_size(move:dict)->None:
     # set vector in the move
     move["vector"] = vector
     return
+
+set_vector_to_right_size(moves["1"])
 
