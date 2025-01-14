@@ -18,14 +18,14 @@ class CY_input():
         self.control_label = tkinter.Label(self.container,text='CY move')
         self.control_label.grid(row=0,column=0, columnspan=2)
 
-        self.control_label = tkinter.Label(self.container,text='control cell (X,Y)')
+        self.control_label = tkinter.Label(self.container,text='Control cell (X,Y)')
         self.control_label.grid(row=1,column=0)
         self.controlx_input = tkinter.Entry(self.container, textvariable=self.controlx)
         self.controlx_input.grid(row=2,column=0)
         self.controly_input = tkinter.Entry(self.container, textvariable=self.controly)
         self.controly_input.grid(row=2,column=1)
 
-        self.target_label = tkinter.Label(self.container,text='target cell (X,Y)')
+        self.target_label = tkinter.Label(self.container,text='Target cell (X,Y)')
         self.target_label.grid(row=3,column=0)
         self.target_input = tkinter.Entry(self.container, textvariable=self.targetx)
         self.target_input.grid(row=4,column=0)
