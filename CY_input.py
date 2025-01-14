@@ -7,11 +7,11 @@ class CY_input():
     def __init__(self, parent):
         self.container = tkinter.Frame(parent)
 
-        self.targetx = None
-        self.targety = None
+        self.targetx = tkinter.StringVar()
+        self.targety = tkinter.StringVar()
 
-        self.controlx = None
-        self.controly = None
+        self.controlx = tkinter.StringVar()
+        self.controly = tkinter.StringVar()
 
         self.angle = 0
 
