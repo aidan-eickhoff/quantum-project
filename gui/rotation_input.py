@@ -37,11 +37,11 @@ class Rotation_input():
         self.container.pack()
 
     def get_move(self) -> circuit_generation.Move:
-        return circuit_generation.RV(np.array(
+        return circuit_generation.Move(circuit_generation.RV(np.array(
             [float(self.rotate_vec_x.get()), 0., float(self.rotate_vec_z.get())]), 
             float(self.angle.get()),
-            [7 * self.celly.get() + self.cellx.get()]
-            )
+            [7 * int(self.celly.get()) + int(self.cellx.get())]
+            ))
 
     
 

@@ -31,6 +31,7 @@ class BlochVisualizer:
 
     def set_vector(self, col: int, row: int, vector: np.ndarray):
         vector *= 1.1 / np.linalg.norm(vector)
+        print(vector)
         self.spheres[col][row].clear()
         self.spheres[col][row].add_vectors(vector);
         self.spheres[col][row].render();

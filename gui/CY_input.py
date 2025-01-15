@@ -39,5 +39,5 @@ class CY_input():
         self.container.pack()
 
     def get_move(self) -> circuit_generation.Move:
-        return circuit_generation.CY([7 * self.controly.get() + self.controlx.get(),
-                                      7 * self.targety.get() + self.targetx.get()])
+        return circuit_generation.Move(circuit_generation.CY([7 * int(self.controly.get()) + int(self.controlx.get()),
+                                      7 * int(self.targety.get()) + int(self.targetx.get())]))

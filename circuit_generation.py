@@ -86,7 +86,7 @@ class RV(Gate):
             print("RV gate rotation axis should have 3 components")
             return
         super().__init__(qubits)
-        self.rot_axis: np.array = rot_angle*np.linalg.norm(rot_axis)
+        self.rot_axis: np.array = rot_angle * rot_axis * np.linalg.norm(rot_axis)
         self.rot_angle: float = rot_angle
         self.target = qubits[0]
 
@@ -327,7 +327,7 @@ def generate_simulator_circuits(moves: list[Move]) -> tuple[list[list[QuantumCir
         
     return ([qcs_x, qcs_y, qcs_z], mapping_bq)
         
-def run_moves(moves: list[Move], isPhysical = False) -> tuple[tuple[list[int], list[int], list[int]], dict[int, int]]:
+def run_moves(moves: list[Move], isPhysical = False) -> tuple[tuple[str, str, str], dict[int, int]]:
     if isPhysical:
         (qc, mapping_bq) = generate_physical_circuit(moves)
         result = run_circuit(qc, 1, False)
@@ -342,7 +342,7 @@ def run_moves(moves: list[Move], isPhysical = False) -> tuple[tuple[list[int], l
         for i in range(3):
             results.append([run_circuit(qc, 1)[0].data for qc in qcs[i]])
 
-        cReg_x = BitArray.concatenate_bits([i.cReg_x for i in results[0]]).array
-        cReg_y = BitArray.concatenate_bits([i.cReg_y for i in results[1]]).array
-        cReg_z = BitArray.concatenate_bits([i.cReg_z for i in results[2]]).array
+        cReg_x = BitArray.concatenate_bits([i.cReg_x for i in results[0]]).get_bitstrings()
+        cReg_y = BitArray.concatenate_bits([i.cReg_y for i in results[1]]).get_bitstrings()
+        cReg_z = BitArray.concatenate_bits([i.cReg_z for i in results[2]]).get_bitstrings()
         return ((cReg_x, cReg_y, cReg_z), mapping_bq)
