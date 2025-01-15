@@ -327,10 +327,10 @@ def generate_simulator_circuits(moves: list[Move]) -> tuple[list[list[QuantumCir
         
     return ([qcs_x, qcs_y, qcs_z], mapping_bq)
         
-def run_moves(moves: list[Move], isPhysical = False) -> tuple[tuple[str, str, str], dict[int, int]]:
+def run_moves(moves: list[Move], numShots: int = 1, isPhysical: bool = False) -> tuple[tuple[str, str, str], dict[int, int]]:
     if isPhysical:
         (qc, mapping_bq) = generate_physical_circuit(moves)
-        result = run_circuit(qc, 1, False)
+        result = run_circuit(qc, numShots, False)
         data = result[0].data
         cReg_x = data.cReg_x.array
         cReg_y = data.cReg_y.array
@@ -340,7 +340,7 @@ def run_moves(moves: list[Move], isPhysical = False) -> tuple[tuple[str, str, st
         (qcs, mapping_bq) = generate_simulator_circuits(moves)
         results = []
         for i in range(3):
-            results.append([run_circuit(qc, 1)[0].data for qc in qcs[i]])
+            results.append([run_circuit(qc, numShots)[0].data for qc in qcs[i]])
 
         cReg_x = BitArray.concatenate_bits([i.cReg_x for i in results[0]]).get_bitstrings()
         cReg_y = BitArray.concatenate_bits([i.cReg_y for i in results[1]]).get_bitstrings()
