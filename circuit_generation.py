@@ -317,10 +317,12 @@ def generate_simulator_circuits(moves: list[Move]) -> tuple[list[list[QuantumCir
             (qc, mapping_bq_temp) = generate_physical_circuit(move_sublist, set([axis]))
             qcs.append(qc)
 
-            # Merge mappings (increase each value by number of keys in final mapping)
-            offset: int = len(mapping_bq.keys())
-            for k, v in mapping_bq_temp.items():
-                mapping_bq[k] = v + offset
+            if axis == Axis.X:
+                # Merge mappings (increase each value by number of keys in final mapping)
+                offset: int = len(mapping_bq.keys())
+                print(offset)
+                for k, v in mapping_bq_temp.items():
+                    mapping_bq[k] = v + offset
 
         
     return ([qcs_x, qcs_y, qcs_z], mapping_bq)
