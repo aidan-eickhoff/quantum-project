@@ -86,7 +86,7 @@ class RV(Gate):
             print("RV gate rotation axis should have 3 components")
             return
         super().__init__(qubits)
-        self.rot_axis: np.array = rot_axis/np.sqrt(np.dot(rot_axis, rot_axis))
+        self.rot_axis: np.array = rot_angle*np.linalg.norm(rot_axis)
         self.rot_angle: float = rot_angle
         self.target = qubits[0]
 
