@@ -244,7 +244,7 @@ def generate_seperation(moves: list[Move]) -> list[frozenset[int]]:
     return [frozenset(x) for x in qubit_set_list]
 
 # Circuit generators
-def generate_physical_circuit(moves: list[Move], measurement_axes: set[Axis] = set([Axis.X, Axis.Y, Axis.Z])) -> QuantumCircuit:
+def generate_physical_circuit(moves: list[Move], measurement_axes: set[Axis] = set([Axis.X, Axis.Y, Axis.Z])) -> (QuantumCircuit, mapping_bq):
     # Count number of necessary qubits
     unique_qubits: set = set()
     for move in moves:
@@ -293,9 +293,9 @@ def generate_physical_circuit(moves: list[Move], measurement_axes: set[Axis] = s
     if Axis.Z in measurement_axes:
         qc.measure(qReg_z, cReg_z)
 
-    return qc
+    return (qc, mapping_bq)
 
-def generate_simulator_circuits(moves: list[Move]) -> list[list[QuantumCircuit]]:
+def generate_simulator_circuits(moves: list[Move]) -> tuple[list[list[QuantumCircuit]], dict[int, int]]:
     qubit_set_list: list[frozenset[int]] = generate_seperation(moves)
 
     # For each set, find the moves that affect it
@@ -311,23 +311,31 @@ def generate_simulator_circuits(moves: list[Move]) -> list[list[QuantumCircuit]]
                 print("ERROR")
 
     qcs_x, qcs_y, qcs_z = list(), list(), list()
+    mapping_bq: dict[int, int] = dict()
     for move_sublist in moves_per_set.values():
         for qcs, axis in [(qcs_x, Axis.X), (qcs_y, Axis.Y), (qcs_z, Axis.Z)]:
-            qcs.append(generate_physical_circuit(move_sublist, set([axis])))
+            (qc, mapping_bq_temp) = generate_physical_circuit(move_sublist, set([axis]))
+            qcs.append(qc)
+
+            # Merge mappings (increase each value by number of keys in final mapping)
+            offset: int = len(mapping_bq.keys())
+            for k, v in mapping_bq_temp.items():
+                mapping_bq[k] = v + offset
+
         
-    return [qcs_x, qcs_y, qcs_z]
+    return ([qcs_x, qcs_y, qcs_z], mapping_bq)
         
-def run_moves(moves: list[Move], isPhysical = False):
+def run_moves(moves: list[Move], isPhysical = False) -> tuple[tuple[list[int], list[int], list[int]], dict[int, int]]:
     if isPhysical:
-        qc = generate_physical_circuit(moves)
+        (qc, mapping_bq) = generate_physical_circuit(moves)
         result = run_circuit(qc, 1, False)
         data = result[0].data
         cReg_x = data.cReg_x.array
         cReg_y = data.cReg_y.array
         cReg_z = data.cReg_z.array
-        return (cReg_x, cReg_y, cReg_z)
+        return ((cReg_x, cReg_y, cReg_z), mapping_bq)
     else:
-        qcs = generate_simulator_circuits(moves)
+        (qcs, mapping_bq) = generate_simulator_circuits(moves)
         results = []
         for i in range(3):
             results.append([run_circuit(qc, 1)[0].data for qc in qcs[i]])
@@ -335,4 +343,4 @@ def run_moves(moves: list[Move], isPhysical = False):
         cReg_x = BitArray.concatenate_bits([i.cReg_x for i in results[0]]).array
         cReg_y = BitArray.concatenate_bits([i.cReg_y for i in results[1]]).array
         cReg_z = BitArray.concatenate_bits([i.cReg_z for i in results[2]]).array
-        return (cReg_x, cReg_y, cReg_z)
+        return ((cReg_x, cReg_y, cReg_z), mapping_bq)
