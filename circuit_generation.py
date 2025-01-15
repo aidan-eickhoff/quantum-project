@@ -6,6 +6,7 @@ from qiskit_aer import *
 from qiskit_ibm_runtime import QiskitRuntimeService, SamplerOptions, SamplerV2 as Sampler
 from qiskit_ibm_runtime.fake_provider import *
 
+from abc import ABC, abstractmethod
 from enum import Enum
 import numpy as np
 
@@ -17,9 +18,13 @@ class Move():
     def __str__(self) -> str:
         return self.gate.__str__()
 
-class Gate():
+class Gate(ABC):
     def __init__(self, slots: list[int]):
         self.slots: list[int] = slots
+
+    @abstractmethod
+    def addToQc(self, qc: QuantumCircuit, mapping_bq: dict[int, int], regs: list[QuantumRegister]):
+        pass
 
 class Axis(Enum):
     X = 0
@@ -39,6 +44,9 @@ class RX(Gate):
     def __str__(self) -> str:
         return "RX: " + str(self.slots[0])
 
+    def addToQc(self, qc: QuantumCircuit, mapping_bq: dict[int, int], regs: list[QuantumRegister]):
+        for qReg in regs: qc.rx(self.angle, qReg[mapping_bq[self.target]]) 
+
 class RY(Gate):
     def __init__(self, angle: float, qubits: list[int]):
         if len(qubits) != 1:
@@ -50,6 +58,9 @@ class RY(Gate):
 
     def __str__(self) -> str:
         return "RY: " + str(self.slots[0])
+    
+    def addToQc(self, qc: QuantumCircuit, mapping_bq: dict[int, int], regs: list[QuantumRegister]):
+        for qReg in regs: qc.ry(self.angle, qReg[mapping_bq[self.target]]) 
 
 class RZ(Gate):
     def __init__(self, angle: float, qubits: list[int]):
@@ -62,6 +73,9 @@ class RZ(Gate):
 
     def __str__(self) -> str:
         return "RZ: " + str(self.slots[0])
+
+    def addToQc(self, qc: QuantumCircuit, mapping_bq: dict[int, int], regs: list[QuantumRegister]):
+        for qReg in regs: qc.rz(self.angle, qReg[mapping_bq[self.target]]) 
 
 class RV(Gate):
     def __init__(self, rot_axis: np.array, rot_angle: float, qubits: list[int]):
@@ -78,6 +92,9 @@ class RV(Gate):
 
     def __str__(self) -> str:
         return "RZ: " + str(self.slots[0])
+    
+    def addToQc(self, qc: QuantumCircuit, mapping_bq: dict[int, int], regs: list[QuantumRegister]):
+        for qReg in regs: qc.rv(*(self.rot_axis * self.rot_angle), qReg[mapping_bq[self.target]])
 
 class H(Gate):
     def __init__(self, qubits: list[int]):
@@ -90,6 +107,9 @@ class H(Gate):
     
     def __str__(self) -> str:
         return "H: " + str(self.target)
+
+    def addToQc(self, qc: QuantumCircuit, mapping_bq: dict[int, int], regs: list[QuantumRegister]):
+        for qReg in regs: qc.h(qReg[mapping_bq[self.target]])
 
 # 2 qubit gates
 class CX(Gate):
@@ -104,6 +124,9 @@ class CX(Gate):
     def __str__(self) -> str:
         return "CX, control: " + str(self.control) +", target: " + str(self.target)
 
+    def addToQc(self, qc: QuantumCircuit, mapping_bq: dict[int, int], regs: list[QuantumRegister]):
+        for qReg in regs: qc.cx(qReg[mapping_bq[self.control]], qReg[mapping_bq[self.target]])
+
 class CY(Gate):
     def __init__(self, qubits: list[int]):
         if len(qubits) != 2:
@@ -115,6 +138,9 @@ class CY(Gate):
 
     def __str__(self) -> str:
         return "CY, control: " + str(self.control) +", target: " + str(self.target)
+    
+    def addToQc(self, qc: QuantumCircuit, mapping_bq: dict[int, int], regs: list[QuantumRegister]):
+        for qReg in regs: qc.cy(qReg[mapping_bq[self.control]], qReg[mapping_bq[self.target]])
 
 class CZ(Gate):
     def __init__(self, qubits: list[int]):
@@ -128,6 +154,9 @@ class CZ(Gate):
     def __str__(self) -> str:
         return "CZ, control: " + str(self.control) +", target: " + str(self.target)
 
+    def addToQc(self, qc: QuantumCircuit, mapping_bq: dict[int, int], regs: list[QuantumRegister]):
+        for qReg in regs: qc.cz(qReg[mapping_bq[self.control]], qReg[mapping_bq[self.target]])
+
 class SWAP(Gate):
     def __init__(self, qubits: list[int]):
         if len(qubits) != 2:
@@ -137,6 +166,10 @@ class SWAP(Gate):
 
     def __str__(self) -> str:
         return "SWAP, control: " + str(self.control) +", target: " + str(self.target)
+
+    def addToQc(self, qc: QuantumCircuit, mapping_bq: dict[int, int], regs: list[QuantumRegister]):
+        for qReg in regs: qc.swap(qReg[mapping_bq[self.slots[0]]], qReg[mapping_bq[self.slots[1]]])
+
 
 # Util functions
 def run_circuit(qc: QuantumCircuit, numShots: int=10, isPhysical: bool=False, hasNoise: bool=False):
@@ -230,104 +263,40 @@ def generate_physical_circuit(moves: list[Move], measurement_axes: set[Axis] = s
     qReg_z = QuantumRegister(q_num, "qReg_z")
     cReg_z = ClassicalRegister(q_num, "cReg_z")
     
-    regs = []
+    regs: list[Register] = []
+    qRegs: list[QuantumRegister] = []
     if Axis.X in measurement_axes:
         regs.append(qReg_x)
         regs.append(cReg_x)
+        qRegs.append(qReg_x)
     if Axis.Y in measurement_axes:
         regs.append(qReg_y)
         regs.append(cReg_y)
+        qRegs.append(qReg_y)
     if Axis.Z in measurement_axes:
         regs.append(qReg_z)
         regs.append(cReg_z)
+        qRegs.append(qReg_z)
 
+    # Add gates to the circuit
     qc = QuantumCircuit(*regs)
     for move in moves:
-        gate = move.gate
-        match gate:
-            # 1 qubit gates
-            case RX():
-                if Axis.X in measurement_axes:
-                    qc.rx(gate.angle, qReg_x[mapping_bq[gate.target]])
-                if Axis.Y in measurement_axes:
-                    qc.rx(gate.angle, qReg_y[mapping_bq[gate.target]])
-                if Axis.Z in measurement_axes:
-                    qc.rx(gate.angle, qReg_z[mapping_bq[gate.target]])
-            case RY():
-                if Axis.X in measurement_axes:
-                    qc.ry(gate.angle, qReg_x[mapping_bq[gate.target]])
-                if Axis.Y in measurement_axes:
-                    qc.ry(gate.angle, qReg_y[mapping_bq[gate.target]])
-                if Axis.Z in measurement_axes:
-                    qc.ry(gate.angle, qReg_z[mapping_bq[gate.target]])
-            case RZ():
-                if Axis.X in measurement_axes:
-                    qc.rz(gate.angle, qReg_x[mapping_bq[gate.target]])
-                if Axis.Y in measurement_axes:
-                    qc.rz(gate.angle, qReg_y[mapping_bq[gate.target]])
-                if Axis.Z in measurement_axes:
-                    qc.rz(gate.angle, qReg_z[mapping_bq[gate.target]])
-            case RV():
-                if Axis.X in measurement_axes:
-                    qc.rv(*(gate.rot_axis * gate.rot_angle), qReg_x[mapping_bq[gate.target]])
-                if Axis.Y in measurement_axes:
-                    qc.rv(*(gate.rot_axis * gate.rot_angle), qReg_y[mapping_bq[gate.target]])
-                if Axis.Z in measurement_axes:
-                    qc.rv(*(gate.rot_axis * gate.rot_angle), qReg_z[mapping_bq[gate.target]])
-            case H():
-                if Axis.X in measurement_axes:
-                    qc.h(qReg_x[mapping_bq[gate.target]])
-                if Axis.Y in measurement_axes:
-                    qc.h(qReg_y[mapping_bq[gate.target]])
-                if Axis.Z in measurement_axes:
-                    qc.h(qReg_z[mapping_bq[gate.target]])
-            
-            # 2 qubit gates
-            case CX():
-                if Axis.X in measurement_axes:
-                    qc.cx(qReg_x[mapping_bq[gate.control]], qReg_x[mapping_bq[gate.target]])
-                if Axis.Y in measurement_axes:
-                    qc.cx(qReg_y[mapping_bq[gate.control]], qReg_y[mapping_bq[gate.target]])
-                if Axis.Z in measurement_axes:
-                    qc.cx(qReg_z[mapping_bq[gate.control]], qReg_z[mapping_bq[gate.target]])
+        move.gate.addToQc(qc, mapping_bq, qRegs)
 
-            case CY():
-                if Axis.X in measurement_axes:
-                    qc.cy(qReg_x[mapping_bq[gate.control]], qReg_x[mapping_bq[gate.target]])
-                if Axis.Y in measurement_axes:
-                    qc.cy(qReg_y[mapping_bq[gate.control]], qReg_y[mapping_bq[gate.target]])
-                if Axis.Z in measurement_axes:
-                    qc.cy(qReg_z[mapping_bq[gate.control]], qReg_z[mapping_bq[gate.target]])
-
-            case CZ():
-                if Axis.X in measurement_axes:
-                    qc.cz(qReg_x[mapping_bq[gate.control]], qReg_x[mapping_bq[gate.target]])
-                if Axis.Y in measurement_axes:
-                    qc.cz(qReg_y[mapping_bq[gate.control]], qReg_y[mapping_bq[gate.target]])
-                if Axis.Z in measurement_axes:
-                    qc.cz(qReg_z[mapping_bq[gate.control]], qReg_z[mapping_bq[gate.target]])
-
-            case SWAP():
-                if Axis.X in measurement_axes:
-                    qc.swap(qReg_x[mapping_bq[gate.slots[0]]], qReg_x[mapping_bq[gate.slots[1]]])
-                if Axis.Y in measurement_axes:
-                    qc.swap(qReg_y[mapping_bq[gate.slots[0]]], qReg_y[mapping_bq[gate.slots[1]]])
-                if Axis.Z in measurement_axes:
-                    qc.swap(qReg_z[mapping_bq[gate.slots[0]]], qReg_z[mapping_bq[gate.slots[1]]])
-
+    # Add measurements
     if Axis.X in measurement_axes:
         qc.h(qReg_x)
         qc.measure(qReg_x, cReg_x)
     if Axis.Y in measurement_axes:
         v = np.pi/np.sqrt(2)
-        qc.rv(0, v, v, qReg_z)
+        qc.rv(0, v, v, qReg_y)
         qc.measure(qReg_y, cReg_y)
     if Axis.Z in measurement_axes:
         qc.measure(qReg_z, cReg_z)
 
     return qc
 
-def generate_simulator_circuits(moves: list[Move]) -> list[QuantumCircuit]:
+def generate_simulator_circuits(moves: list[Move]) -> list[list[QuantumCircuit]]:
     qubit_set_list: list[frozenset[int]] = generate_seperation(moves)
 
     # For each set, find the moves that affect it
@@ -342,38 +311,29 @@ def generate_simulator_circuits(moves: list[Move]) -> list[QuantumCircuit]:
                 # This should not happen
                 print("ERROR")
 
-    qcs: list[QuantumCircuit] = list()
+    qcs_x, qcs_y, qcs_z = list(), list(), list()
     for move_sublist in moves_per_set.values():
-        qcs.append(generate_physical_circuit(move_sublist, set([Axis.X])))
-        qcs.append(generate_physical_circuit(move_sublist, set([Axis.Y])))
-        qcs.append(generate_physical_circuit(move_sublist, set([Axis.Z])))
-
-    return qcs
+        for qcs, axis in [(qcs_x, Axis.X), (qcs_y, Axis.Y), (qcs_z, Axis.Z)]:
+            qcs.append(generate_physical_circuit(move_sublist, set([axis])))
+        
+    return [qcs_x, qcs_y, qcs_z]
         
 def run_moves(moves: list[Move], isPhysical = False):
     if isPhysical:
         qc = generate_physical_circuit(moves)
         result = run_circuit(qc, 1, False)
-        cReg_x = result[0].data.cReg_x.array
-        cReg_y = result[0].data.cReg_y.array
-        cReg_z = result[0].data.cReg_z.array
+        data = result[0].data
+        cReg_x = data.cReg_x.array
+        cReg_y = data.cReg_y.array
+        cReg_z = data.cReg_z.array
         return (cReg_x, cReg_y, cReg_z)
     else:
         qcs = generate_simulator_circuits(moves)
-        results = [run_circuit(qc, 1)[0].data for qc in qcs]
-        results_x = []
-        results_y = []
-        results_z = []
-        for i in range(int(len(results)/3)):
-            results_x.append(results[3*i])
-            results_y.append(results[3*i+1])
-            results_z.append(results[3*i+2])
+        results = []
+        for i in range(3):
+            results.append([run_circuit(qc, 1)[0].data for qc in qcs[i]])
 
-        cReg_x = BitArray.concatenate_bits([i.cReg_x for i in results_x]).array
-        cReg_y = BitArray.concatenate_bits([i.cReg_y for i in results_y]).array
-        cReg_z = BitArray.concatenate_bits([i.cReg_z for i in results_z]).array
+        cReg_x = BitArray.concatenate_bits([i.cReg_x for i in results[0]]).array
+        cReg_y = BitArray.concatenate_bits([i.cReg_y for i in results[1]]).array
+        cReg_z = BitArray.concatenate_bits([i.cReg_z for i in results[2]]).array
         return (cReg_x, cReg_y, cReg_z)
-
-r = run_moves([Move(RX(-np.pi/2, [1]))])
-print(r)
-
