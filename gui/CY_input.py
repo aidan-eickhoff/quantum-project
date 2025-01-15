@@ -1,4 +1,6 @@
 import tkinter
+import circuit_generation
+import numpy as np
 
 class CY_input():
     def __init__(self, parent):
@@ -35,3 +37,7 @@ class CY_input():
         self.angle_input.grid(row=6,column=0)
 
         self.container.pack()
+
+    def get_move(self) -> circuit_generation.Move:
+        return circuit_generation.CY([7 * self.controly.get() + self.controlx.get(),
+                                      7 * self.targety.get() + self.targetx.get()])

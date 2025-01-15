@@ -1,4 +1,6 @@
 import tkinter
+import circuit_generation
+import numpy as np
 
 class Rotation_input():
     def __init__(self, parent):
@@ -33,6 +35,13 @@ class Rotation_input():
         self.angle_input.grid(row=6,column=0)
 
         self.container.pack()
+
+    def get_move(self) -> circuit_generation.Move:
+        return circuit_generation.RV(np.array(
+            [float(self.rotate_vec_x.get()), 0., float(self.rotate_vec_z.get())]), 
+            float(self.angle.get()),
+            [7 * self.celly.get() + self.cellx.get()]
+            )
 
     
 
