@@ -1,0 +1,30 @@
+- We are doing quantum connect 4, see overleaf for the rules
+- We can augment the project using the follow options:
+	- Theory behind quantum games, lots of research available in this area
+	- Error correction in connect 4 to see if we can make it more reliable on 		physical hardware
+	- Formally proving that every turn based quantum game using a certain set of mechanics can be simulated on a classical computer using the right datastructures (queue / exponential tree)
+
+
+2 approaches:
+- turn it into ``quantum'' game which is not easily classically simulatable
+	- density matrix off-diagonal component? how affected by move
+	- circuit, some gates, pi/2 gate, pi gate, how do moves translate to these  games
+- approach where quantum is more efficient?
+
+- not every conditional operation is quantum -> how can we use entanglement more than conditional move
+
+- exponential requires exponential user input
+
+- how is 00 + 11 different from conditional?
+	- bell experiment settles the debate
+	- measuring along 1 basis does not allow for classical/quantum correlation
+	- using 3 bases joint correlation beast classical
+
+- interference type move?
+	- 
+
+- measuring along different bases gives more correlation
+	- 1 axis for color
+	- 1 axis for taken at all
+
+- with a 2 qubit gate there can be a phase acquired on the conditional qubit
