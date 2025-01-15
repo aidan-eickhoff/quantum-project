@@ -57,7 +57,7 @@ class tkinterHandler():
 
         # create drawable canvas
         self.bloch_visualizer = BlochVisualizer(self.main_window) #constructor performs .pack()
-        self.input_panel = Input_panel(self.main_window, self.add_move) #constructor performs .pack()
+        self.input_panel = Input_panel(self.main_window, None) #constructor performs .pack()
 
         self.bloch_visualizer.container.pack(side=tkinter.LEFT)
         self.input_panel.container.pack(side=tkinter.RIGHT)

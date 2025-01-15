@@ -13,7 +13,6 @@ class BlochVisualizer:
 
     def make_bloch_sphere(self, col, row) -> tuple[qutip.Bloch, FigureCanvasTkAgg]:
         fig = Figure(figsize = (1, 1), dpi = 150)
-        fig.patch.set_facecolor('xkcd:mint green')
         
         b = qutip.Bloch(fig)
         b.add_vectors([1.1 / np.sqrt(2), 1.1/np.sqrt(2),0], colors=["#f00"])
@@ -23,7 +22,7 @@ class BlochVisualizer:
         b.vector_width = 1
         b.frame_width = 0.5
         b.sphere_alpha = 0.1
-        b.frame_alpha = 0.0
+        b.frame_alpha = 0.05
         b.render()
     
         canvas = FigureCanvasTkAgg(fig, master = self.container)  
