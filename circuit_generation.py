@@ -86,7 +86,7 @@ class RV(Gate):
             print("RV gate rotation axis should have 3 components")
             return
         super().__init__(qubits)
-        self.rot_axis: np.array = rot_axis/np.sqrt(np.dot(rot_axis, rot_axis))
+        self.rot_axis: np.array = rot_angle*np.linalg.norm(rot_axis)
         self.rot_angle: float = rot_angle
         self.target = qubits[0]
 
@@ -173,10 +173,9 @@ class SWAP(Gate):
 
 # Util functions
 def run_circuit(qc: QuantumCircuit, numShots: int=10, isPhysical: bool=False, hasNoise: bool=False):
-
     # Define which backend to use
     if isPhysical:
-        service = QiskitRuntimeService(channel="ibm_quantum", token=token)
+        service = QiskitRuntimeService(channel="ibm_quantum")
         backend = service.least_busy(operational=True, simulator=False)
     elif hasNoise:
         backend = FakeWashingtonV2()
