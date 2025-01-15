@@ -22,7 +22,7 @@ class BlochVisualizer:
         b.sphere_alpha = 0.1
         b.frame_alpha = 0.05
         b.render()
-    
+
         canvas = FigureCanvasTkAgg(fig, master = self.container)  
         canvas.draw()
         canvas.get_tk_widget().grid(column=col, row=row)
