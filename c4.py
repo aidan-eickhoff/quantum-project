@@ -48,7 +48,7 @@ class BoardState():
         if target_turn <= self.last_collapsed_move:
             print("Error, collapsing moves which are already collapsed")
             return
-        return circuit_generation.run_moves(self.moves[self.last_collapsed_move: target_turn])
+        return circuit_generation.run_moves(self.moves[self.last_collapsed_move: target_turn], 1000)
 
 class tkinterHandler():
     def __init__(self):
@@ -74,18 +74,16 @@ class tkinterHandler():
         self.update_board(*self.board_state.collapse_event())
 
     def update_board(self, measurements: tuple[str, str, str], mapping_bq: dict[int, int]):
-        print(list(measurements[0]))
-        print(mapping_bq)
         for i in range(7):
             for j in range(6):
                 qb_num = 7 * i + j
                 if qb_num not in mapping_bq.keys():
                     continue
-                print(-1 - mapping_bq[qb_num])
+                np.mean(np.array(list(map(list, measurements[0])))[:,-1 - mapping_bq[qb_num]].astype(np.float64) * 2. - 1)
                 self.bloch_visualizer.set_vector(i, j, np.array([
-                    float(list(measurements[0][0])[-1 - mapping_bq[qb_num]]) * 2 - 1,
-                    float(list(measurements[1][0])[-1 - mapping_bq[qb_num]]) * 2 - 1,
-                    float(list(measurements[2][0])[-1 - mapping_bq[qb_num]]) * 2 - 1
+                    np.mean(np.array(list(map(list, measurements[0])))[:,-1 - mapping_bq[qb_num]].astype(np.float64) * 2. - 1),
+                    np.mean(np.array(list(map(list, measurements[1])))[:,-1 - mapping_bq[qb_num]].astype(np.float64) * 2. - 1),
+                    np.mean(np.array(list(map(list, measurements[2])))[:,-1 - mapping_bq[qb_num]].astype(np.float64) * 2. - 1)
                 ]))
                 # self.bloch_visualizer.set_vector(i, j, np.array(list(map(float, [measurements[0][0][mapping_bq[qb_num]] * 2 - 1, measurements[1][0][mapping_bq[qb_num]] * 2 - 1, measurements[1][0][mapping_bq[qb_num]] * 2 - 1]))))
 

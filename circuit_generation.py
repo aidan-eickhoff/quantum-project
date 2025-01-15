@@ -86,7 +86,7 @@ class RV(Gate):
             print("RV gate rotation axis should have 3 components")
             return
         super().__init__(qubits)
-        self.rot_axis: np.array = rot_angle * rot_axis * np.linalg.norm(rot_axis)
+        self.rot_axis: np.array = rot_axis / np.linalg.norm(rot_axis)
         self.rot_angle: float = rot_angle
         self.target = qubits[0]
 
@@ -320,7 +320,6 @@ def generate_simulator_circuits(moves: list[Move]) -> tuple[list[list[QuantumCir
             if axis == Axis.X:
                 # Merge mappings (increase each value by number of keys in final mapping)
                 offset: int = len(mapping_bq.keys())
-                print(offset)
                 for k, v in mapping_bq_temp.items():
                     mapping_bq[k] = v + offset
 

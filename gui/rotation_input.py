@@ -42,6 +42,7 @@ class Rotation_input():
             float(self.angle.get()),
             [7 * int(self.celly.get()) + int(self.cellx.get())]
             ))
+        # return circuit_generation.Move(circuit_generation.RX(float(self.angle.get()), [7 * int(self.celly.get()) + int(self.cellx.get())]))
 
     
 
