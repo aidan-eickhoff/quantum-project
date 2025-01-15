@@ -244,7 +244,7 @@ def generate_seperation(moves: list[Move]) -> list[frozenset[int]]:
     return [frozenset(x) for x in qubit_set_list]
 
 # Circuit generators
-def generate_physical_circuit(moves: list[Move], measurement_axes: set[Axis] = set([Axis.X, Axis.Y, Axis.Z])) -> (QuantumCircuit, mapping_bq):
+def generate_physical_circuit(moves: list[Move], measurement_axes: set[Axis] = set([Axis.X, Axis.Y, Axis.Z])) -> tuple[QuantumCircuit, dict[int, int]]:
     # Count number of necessary qubits
     unique_qubits: set = set()
     for move in moves:

@@ -42,7 +42,7 @@ class BoardState():
 
 
     # called to collapse the board up to a target turn -- returns the updated board
-    def collapse_event(self, target_turn: int|None = None) -> np.ndarray:
+    def collapse_event(self, target_turn: int|None = None) -> tuple[tuple[list[int], list[int], list[int]], dict[int, int]]:
         if target_turn is None:
             target_turn = len(self.moves)
         if target_turn <= self.last_collapsed_move:
@@ -73,7 +73,7 @@ class tkinterHandler():
         self.board_state.moves.append(self.input_panel.get_move())
         self.update_board(*self.board_state.collapse_event())
 
-    def update_board(self, measurements: tuple[list[int], list[int], list[int]], mapping_bq):
+    def update_board(self, measurements: tuple[list[int], list[int], list[int]], mapping_bq: dict[int, int]):
         for i in range(7):
             for j in range(6):
                 qb_num = 7 * i + j
