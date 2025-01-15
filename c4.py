@@ -2,6 +2,7 @@ import tkinter
 import numpy as np
 from gui.input_panel import Input_panel
 from bloch import BlochVisualizer
+import circuit_generation
 
 class BoardState():
     def __init__(self):
@@ -47,9 +48,7 @@ class BoardState():
         if target_turn <= self.last_collapsed_move:
             print("Error, collapsing moves which are already collapsed")
             return
-        new_board = self.collapse_moves(self.moves[self.last_collapsed_move:target_turn])
-        self.last_collapsed_move = target_turn
-        return new_board
+        return circuit_generation.run_moves(self.moves[self.last_collapsed_move: target_turn])
 
 class tkinterHandler():
     def __init__(self):
@@ -71,9 +70,14 @@ class tkinterHandler():
 
     # submit button click calls this method
     def add_move(self):
-        vec: np.ndarray = np.random.rand(1, 3)
-        vec *= 1.1 / np.linalg.norm(vec)
-        self.bloch_visualizer.add_vector(np.random.randint(0, 7), 0, vec.tolist())
+        self.board_state.moves.append(self.input_panel.get_move())
+        self.update_board(*self.board_state.collapse_event())
+
+    def update_board(self, measurements: tuple[list[int], list[int], list[int]], mapping_bq):
+        for i in range(7):
+            for j in range(6):
+                qb_num = 7 * i + j
+                self.bloch_visualizer.set_vector(measurements[0][mapping_bq[qb_num]] * 2 - 1, measurements[1][mapping_bq[qb_num]] * 2 - 1, measurements[1][mapping_bq[qb_num]] * -2 + 1)
 
 
 if __name__ == "__main__":

@@ -11,18 +11,18 @@ class Input_panel():
         self.move_type_container.grid(row=0,column=1)
 
         # attributes for the diffrent move inputs, starts with rotate input
-        self.superpos_input = Rotation_input(self.move_type_container)
-        self.entanglement_input = CY_input(self.move_type_container)
-        self.entanglement_input.container.pack_forget() # hides CY input
+        self.rotation_input = Rotation_input(self.move_type_container)
+        self.control_y_input = CY_input(self.move_type_container)
+        self.control_y_input.container.pack_forget() # hides CY input
 
         #switch move buttons
         self.move_select_container = tkinter.Frame(self.container, borderwidth=2, relief=tkinter.RIDGE)
         self.move_type: int = 0
-        self.move_type_superposition = tkinter.Button(self.move_select_container, text='rotation move', command=self.show_superposition_inputs, state="disabled")
-        self.move_type_superposition.grid(row=0, column=0, sticky="ew")
+        self.move_type_rotation = tkinter.Button(self.move_select_container, text='rotation move', command=self.show_rotation_input, state="disabled")
+        self.move_type_rotation.grid(row=0, column=0, sticky="ew")
 
-        self.move_type_entanglement = tkinter.Button(self.move_select_container, text='CY move', command=self.show_entanglement_inputs)
-        self.move_type_entanglement.grid(row=1, column=0, sticky="ew")
+        self.move_type_control_y = tkinter.Button(self.move_select_container, text='CY move', command=self.show_control_y_input)
+        self.move_type_control_y.grid(row=1, column=0, sticky="ew")
 
         self.move_select_container.grid(row=0,column=0, sticky="ns")
 
@@ -34,14 +34,23 @@ class Input_panel():
         for child in self.move_type_container.winfo_children():
             child.pack_forget()
     
-    def show_superposition_inputs(self):
-        self.move_type_superposition["state"] = "disabled"
-        self.move_type_entanglement["state"] = "normal"
+    def show_rotation_input(self):
+        self.move_type_rotation["state"] = "disabled"
+        self.move_type_control_y["state"] = "normal"
         self.clear_input()
-        self.superpos_input.container.pack() # = Rotation_input(self.move_type_container)
+        self.rotation_input.container.pack() # = Rotation_input(self.move_type_container)
+        self.move_type = 0
 
-    def show_entanglement_inputs(self):
-        self.move_type_entanglement["state"] = "disabled"
-        self.move_type_superposition["state"] = "normal"
+    def show_control_y_input(self):
+        self.move_type_control_y["state"] = "disabled"
+        self.move_type_rotation["state"] = "normal"
         self.clear_input()
-        self.entanglement_input.container.pack() # = CY_input(self.move_type_container)
+        self.control_y_input.container.pack() # = CY_input(self.move_type_container)
+        self.move_type = 1
+
+    def get_move(self):
+        match self.move_type:
+            case 0:
+                return self.rotation_input.get_move()
+            case 1:
+                return self.control_y_input.get_move()
