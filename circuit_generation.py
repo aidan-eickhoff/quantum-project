@@ -173,10 +173,9 @@ class SWAP(Gate):
 
 # Util functions
 def run_circuit(qc: QuantumCircuit, numShots: int=10, isPhysical: bool=False, hasNoise: bool=False):
-
     # Define which backend to use
     if isPhysical:
-        service = QiskitRuntimeService(channel="ibm_quantum", token=token)
+        service = QiskitRuntimeService(channel="ibm_quantum")
         backend = service.least_busy(operational=True, simulator=False)
     elif hasNoise:
         backend = FakeWashingtonV2()
