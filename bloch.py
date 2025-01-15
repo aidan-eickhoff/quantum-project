@@ -8,15 +8,13 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 class BlochVisualizer:
     def __init__(self, parent):
         self.container = tk.Frame(parent)
-        self.spheres = [[self.make_bloch_sphere(i, j) for i in range(7)] for j in range(6)]
+        self.spheres: list[list[tuple[qutip.Bloch, FigureCanvasTkAgg]]] = [[self.make_bloch_sphere(j, i) for i in range(6)] for j in range(7)]
                 
 
-    def make_bloch_sphere(self, col, row) -> tuple[qutip.Bloch, FigureCanvasTkAgg]:
+    def make_bloch_sphere(self, col: int, row: int) -> tuple[qutip.Bloch, FigureCanvasTkAgg]:
         fig = Figure(figsize = (1, 1), dpi = 150)
         
         b = qutip.Bloch(fig)
-        b.add_vectors([1.1 / np.sqrt(2), 1.1/np.sqrt(2),0], colors=["#f00"])
-        # b.add_vectors([1 / np.sqrt(2), -1/np.sqrt(2),0], colors=["#f00"])
 
         b.font_size = 8
         b.vector_width = 1
@@ -27,6 +25,11 @@ class BlochVisualizer:
     
         canvas = FigureCanvasTkAgg(fig, master = self.container)  
         canvas.draw()
-        canvas.get_tk_widget().grid(row=row, column=col)
+        canvas.get_tk_widget().grid(column=col, row=row)
 
         return (b, canvas)
+
+    def add_vector(self, col: int, row: int, vector: tuple[float, float, float]):
+        self.spheres[col][row][0].add_vectors(vector);
+        self.spheres[col][row][0].render();
+

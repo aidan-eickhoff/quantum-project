@@ -1,9 +1,7 @@
 import tkinter
-import numpy as np
-import math
-import random
-from rotation_input import Rotation_input
-from CY_input import CY_input
+# requires gui package as main python file is outside of package
+from gui.rotation_input import Rotation_input
+from gui.CY_input import CY_input
 
 class Input_panel():
     def __init__(self, parent, add_move):
@@ -26,7 +24,7 @@ class Input_panel():
         self.move_type_entanglement = tkinter.Button(self.move_select_container, text='CY move', command=self.show_entanglement_inputs)
         self.move_type_entanglement.grid(row=1, column=0, sticky="ew")
 
-        self.move_select_container.grid(row=0,column=0,sticky="ns")
+        self.move_select_container.grid(row=0,column=0, sticky="ns")
 
         #submit_move button
         self.submit_button = tkinter.Button(self.container, text='Play move', command=add_move)
@@ -40,10 +38,10 @@ class Input_panel():
         self.move_type_superposition["state"] = "disabled"
         self.move_type_entanglement["state"] = "normal"
         self.clear_input()
-        self.superpos_input.container.pack()# = Rotation_input(self.move_type_container)
+        self.superpos_input.container.pack() # = Rotation_input(self.move_type_container)
 
     def show_entanglement_inputs(self):
         self.move_type_entanglement["state"] = "disabled"
         self.move_type_superposition["state"] = "normal"
         self.clear_input()
-        self.entanglement_input.container.pack() #= CY_input(self.move_type_container)
+        self.entanglement_input.container.pack() # = CY_input(self.move_type_container)

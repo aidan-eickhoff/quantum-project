@@ -1,7 +1,4 @@
 import tkinter
-import numpy as np
-import math
-import random
 
 class CY_input():
     def __init__(self, parent):

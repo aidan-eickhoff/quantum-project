@@ -1,6 +1,6 @@
 import tkinter
 import numpy as np
-from input_panel import Input_panel
+from gui.input_panel import Input_panel
 from bloch import BlochVisualizer
 
 class BoardState():
@@ -56,8 +56,8 @@ class tkinterHandler():
         self.main_window = tkinter.Tk()
 
         # create drawable canvas
-        self.bloch_visualizer = BlochVisualizer(self.main_window) #constructor performs .pack()
-        self.input_panel = Input_panel(self.main_window, None) #constructor performs .pack()
+        self.bloch_visualizer = BlochVisualizer(self.main_window)
+        self.input_panel = Input_panel(self.main_window, self.add_move)
 
         self.bloch_visualizer.container.pack(side=tkinter.LEFT)
         self.input_panel.container.pack(side=tkinter.RIGHT)
@@ -67,6 +67,13 @@ class tkinterHandler():
 
     def show_window(self):
         self.main_window.mainloop()
+
+
+    # submit button click calls this method
+    def add_move(self):
+        vec: np.ndarray = np.random.rand(1, 3)
+        vec *= 1.1 / np.linalg.norm(vec)
+        self.bloch_visualizer.add_vector(np.random.randint(0, 7), 0, vec.tolist())
 
 
 if __name__ == "__main__":
