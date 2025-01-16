@@ -2,6 +2,7 @@ import tkinter
 import numpy as np
 from gui.input_panel import Input_panel
 from bloch import BlochVisualizer
+from recent_moves import Recent_moves_list
 import circuit_generation
 
 class BoardState():
@@ -59,9 +60,11 @@ class tkinterHandler():
         # create drawable canvas
         self.bloch_visualizer = BlochVisualizer(self.main_window)
         self.input_panel = Input_panel(self.main_window, self.add_move)
+        self.recent_moves_list = Recent_moves_list(self.main_window)
 
         self.input_panel.container.grid(column=0, row=0, padx= 10)
-        self.bloch_visualizer.container.grid(column=1,row=0)
+        self.recent_moves_list.container.grid(column=0, row=1, padx=10, sticky="news")
+        self.bloch_visualizer.container.grid(column=1,row=0, rowspan=2)
 
         self.board_state: BoardState = BoardState()
 
@@ -73,6 +76,7 @@ class tkinterHandler():
     # submit button click calls this method
     def add_move(self):
         self.board_state.moves.append(self.input_panel.get_move())
+        self.recent_moves_list.add_move(self.input_panel.get_move())
         self.update_board(*self.board_state.collapse_event())
 
     def update_board(self, measurements: tuple[str, str, str], mapping_bq: dict[int, int]):
