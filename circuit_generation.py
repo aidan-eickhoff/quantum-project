@@ -285,7 +285,10 @@ def generate_seperation(moves: list[Move]) -> list[frozenset[int]]:
         union: set[int] = set()
         for qubit_set in sets:
             union = union.union(qubit_set)
-            qubit_set_list.remove(qubit_set)
+            try:
+                qubit_set_list.remove(qubit_set)
+            except Exception:
+                pass
         qubit_set_list.append(union)
 
     # Freeze sets (so they can be used as index later)
