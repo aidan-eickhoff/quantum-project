@@ -53,13 +53,15 @@ class BoardState():
 class tkinterHandler():
     def __init__(self):
         self.main_window = tkinter.Tk()
+        # fit the window to the screen
+        self.main_window.state('zoomed')
 
         # create drawable canvas
         self.bloch_visualizer = BlochVisualizer(self.main_window)
         self.input_panel = Input_panel(self.main_window, self.add_move)
 
-        self.bloch_visualizer.container.pack(side=tkinter.LEFT)
-        self.input_panel.container.pack(side=tkinter.RIGHT)
+        self.input_panel.container.grid(column=0, row=0, padx= 10)
+        self.bloch_visualizer.container.grid(column=1,row=0)
 
         self.board_state: BoardState = BoardState()
 
