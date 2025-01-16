@@ -29,7 +29,7 @@ class Rotation_input():
         self.rotationz_input = tkinter.Entry(self.container, textvariable=self.rotate_vec_z)
         self.rotationz_input.grid(row=4,column=1)
 
-        self.angle_label = tkinter.Label(self.container, text='Rotation angle (rad)')
+        self.angle_label = tkinter.Label(self.container, text='Rotation angle (deg)')
         self.angle_label.grid(row=5,column=0)
         self.angle_input = tkinter.Entry(self.container, textvariable=self.angle)
         self.angle_input.grid(row=6,column=0)

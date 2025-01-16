@@ -81,8 +81,8 @@ class tkinterHandler():
                     continue
                 np.mean(np.array(list(map(list, measurements[0])))[:,-1 - mapping_bq[qb_num]].astype(np.float64) * 2. - 1)
                 self.bloch_visualizer.set_vector(i, j, np.array([
-                    np.mean(np.array(list(map(list, measurements[0])))[:,-1 - mapping_bq[qb_num]].astype(np.float64) * 2. - 1),
-                    np.mean(np.array(list(map(list, measurements[1])))[:,-1 - mapping_bq[qb_num]].astype(np.float64) * 2. - 1),
+                    np.mean(np.array(list(map(list, measurements[0])))[:,-1 - mapping_bq[qb_num]].astype(np.float64) * -2. + 1),
+                    np.mean(np.array(list(map(list, measurements[1])))[:,-1 - mapping_bq[qb_num]].astype(np.float64) * -2. + 1),
                     np.mean(np.array(list(map(list, measurements[2])))[:,-1 - mapping_bq[qb_num]].astype(np.float64) * -2. + 1)
                 ]))
                 # self.bloch_visualizer.set_vector(i, j, np.array(list(map(float, [measurements[0][0][mapping_bq[qb_num]] * 2 - 1, measurements[1][0][mapping_bq[qb_num]] * 2 - 1, measurements[1][0][mapping_bq[qb_num]] * 2 - 1]))))
