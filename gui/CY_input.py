@@ -12,7 +12,7 @@ class CY_input():
         self.controlx = tkinter.StringVar()
         self.controly = tkinter.StringVar()
 
-        self.angle = 0
+        self.angle = tkinter.StringVar()
 
         self.control_label = tkinter.Label(self.container,text='CY move')
         self.control_label.grid(row=0,column=0, columnspan=2)
@@ -31,7 +31,7 @@ class CY_input():
         self.target_input = tkinter.Entry(self.container, textvariable=self.targety)
         self.target_input.grid(row=4,column=1)
 
-        self.angle_label = tkinter.Label(self.container,text='Rotation angle (deg)')
+        self.angle_label = tkinter.Label(self.container,text='Rotation angle (rad)')
         self.angle_label.grid(row=5,column=0)
         self.angle_input = tkinter.Entry(self.container, textvariable=self.angle)
         self.angle_input.grid(row=6,column=0)
@@ -39,5 +39,6 @@ class CY_input():
         self.container.pack()
 
     def get_move(self) -> circuit_generation.Move:
-        return circuit_generation.Move(circuit_generation.CY([7 * int(self.controly.get()) + int(self.controlx.get()),
+        return circuit_generation.Move(circuit_generation.CRY(float(self.angle) * np.pi/180,
+                                    [7 * int(self.controly.get()) + int(self.controlx.get()),
                                       7 * int(self.targety.get()) + int(self.targetx.get())]))

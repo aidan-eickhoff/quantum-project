@@ -157,6 +157,54 @@ class CZ(Gate):
     def addToQc(self, qc: QuantumCircuit, mapping_bq: dict[int, int], regs: list[QuantumRegister]):
         for qReg in regs: qc.cz(qReg[mapping_bq[self.control]], qReg[mapping_bq[self.target]])
 
+class CRX(Gate):
+    def __init__(self, angle, qubits: list[int]):
+        if len(qubits) != 2:
+            print("CRX gate should affect 2 qubit.")
+            return
+        super().__init__(qubits)
+        self.control = qubits[0]
+        self.target = qubits[1]
+        self.angle = angle     
+
+    def __str__(self) -> str:
+        return "CRX, control: " + str(self.control) +", target: " + str(self.target)
+
+    def addToQc(self, qc: QuantumCircuit, mapping_bq: dict[int, int], regs: list[QuantumRegister]):
+        for qReg in regs: qc.crx(self.angle, qReg[mapping_bq[self.control]], qReg[mapping_bq[self.target]])
+
+class CRY(Gate):
+    def __init__(self, angle, qubits: list[int]):
+        if len(qubits) != 2:
+            print("CRY gate should affect 2 qubit.")
+            return
+        super().__init__(qubits)
+        self.control = qubits[0]
+        self.target = qubits[1]
+        self.angle = angle     
+
+    def __str__(self) -> str:
+        return "CRY, control: " + str(self.control) +", target: " + str(self.target)
+
+    def addToQc(self, qc: QuantumCircuit, mapping_bq: dict[int, int], regs: list[QuantumRegister]):
+        for qReg in regs: qc.cry(self.angle, qReg[mapping_bq[self.control]], qReg[mapping_bq[self.target]])
+
+class CRZ(Gate):
+    def __init__(self, angle, qubits: list[int]):
+        if len(qubits) != 2:
+            print("CRZ gate should affect 2 qubit.")
+            return
+        super().__init__(qubits)
+        self.control = qubits[0]
+        self.target = qubits[1]
+        self.angle = angle     
+
+    def __str__(self) -> str:
+        return "CRZ, control: " + str(self.control) +", target: " + str(self.target)
+
+    def addToQc(self, qc: QuantumCircuit, mapping_bq: dict[int, int], regs: list[QuantumRegister]):
+        for qReg in regs: qc.crz(self.angle, qReg[mapping_bq[self.control]], qReg[mapping_bq[self.target]])
+
 class SWAP(Gate):
     def __init__(self, qubits: list[int]):
         if len(qubits) != 2:
