@@ -8,7 +8,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 class BlochVisualizer:
     def __init__(self, parent):
         self.container = tk.Frame(parent)
-        self.spheres: list[list[qutip.Bloch]] = [[self.make_bloch_sphere(j, i) for i in range(6)] for j in range(7)]
+        self.spheres: list[list[qutip.Bloch]] = [[self.make_bloch_sphere(i, j) for i in range(6)] for j in range(7)]
                 
 
     def make_bloch_sphere(self, col: int, row: int) -> qutip.Bloch:
