@@ -1,7 +1,6 @@
 import tkinter
+import circuit_generation
 import numpy as np
-import math
-import random
 
 class Rotation_input():
     def __init__(self, parent):
@@ -30,12 +29,19 @@ class Rotation_input():
         self.rotationz_input = tkinter.Entry(self.container, textvariable=self.rotate_vec_z)
         self.rotationz_input.grid(row=4,column=1)
 
-        self.angle_label = tkinter.Label(self.container, text='Rotation angle (deg)')
+        self.angle_label = tkinter.Label(self.container, text='Rotation angle (rad)')
         self.angle_label.grid(row=5,column=0)
         self.angle_input = tkinter.Entry(self.container, textvariable=self.angle)
         self.angle_input.grid(row=6,column=0)
 
         self.container.pack()
+
+    def get_move(self) -> circuit_generation.Move:
+        return circuit_generation.Move(circuit_generation.RV(np.array(
+            [float(self.rotate_vec_x.get()), 0., float(self.rotate_vec_z.get())]), 
+            float(self.angle.get()) * np.pi/180,
+            [7 * int(self.celly.get()) + int(self.cellx.get())]
+            ))
 
     
 

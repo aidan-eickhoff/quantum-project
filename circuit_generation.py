@@ -86,7 +86,7 @@ class RV(Gate):
             print("RV gate rotation axis should have 3 components")
             return
         super().__init__(qubits)
-        self.rot_axis: np.array = rot_axis/np.sqrt(np.dot(rot_axis, rot_axis))
+        self.rot_axis: np.array = rot_axis / np.linalg.norm(rot_axis)
         self.rot_angle: float = rot_angle
         self.target = qubits[0]
 
@@ -157,6 +157,54 @@ class CZ(Gate):
     def addToQc(self, qc: QuantumCircuit, mapping_bq: dict[int, int], regs: list[QuantumRegister]):
         for qReg in regs: qc.cz(qReg[mapping_bq[self.control]], qReg[mapping_bq[self.target]])
 
+class CRX(Gate):
+    def __init__(self, angle, qubits: list[int]):
+        if len(qubits) != 2:
+            print("CRX gate should affect 2 qubit.")
+            return
+        super().__init__(qubits)
+        self.control = qubits[0]
+        self.target = qubits[1]
+        self.angle = angle     
+
+    def __str__(self) -> str:
+        return "CRX, control: " + str(self.control) +", target: " + str(self.target)
+
+    def addToQc(self, qc: QuantumCircuit, mapping_bq: dict[int, int], regs: list[QuantumRegister]):
+        for qReg in regs: qc.crx(self.angle, qReg[mapping_bq[self.control]], qReg[mapping_bq[self.target]])
+
+class CRY(Gate):
+    def __init__(self, angle, qubits: list[int]):
+        if len(qubits) != 2:
+            print("CRY gate should affect 2 qubit.")
+            return
+        super().__init__(qubits)
+        self.control = qubits[0]
+        self.target = qubits[1]
+        self.angle = angle     
+
+    def __str__(self) -> str:
+        return "CRY, control: " + str(self.control) +", target: " + str(self.target)
+
+    def addToQc(self, qc: QuantumCircuit, mapping_bq: dict[int, int], regs: list[QuantumRegister]):
+        for qReg in regs: qc.cry(self.angle, qReg[mapping_bq[self.control]], qReg[mapping_bq[self.target]])
+
+class CRZ(Gate):
+    def __init__(self, angle, qubits: list[int]):
+        if len(qubits) != 2:
+            print("CRZ gate should affect 2 qubit.")
+            return
+        super().__init__(qubits)
+        self.control = qubits[0]
+        self.target = qubits[1]
+        self.angle = angle     
+
+    def __str__(self) -> str:
+        return "CRZ, control: " + str(self.control) +", target: " + str(self.target)
+
+    def addToQc(self, qc: QuantumCircuit, mapping_bq: dict[int, int], regs: list[QuantumRegister]):
+        for qReg in regs: qc.crz(self.angle, qReg[mapping_bq[self.control]], qReg[mapping_bq[self.target]])
+
 class SWAP(Gate):
     def __init__(self, qubits: list[int]):
         if len(qubits) != 2:
@@ -173,10 +221,9 @@ class SWAP(Gate):
 
 # Util functions
 def run_circuit(qc: QuantumCircuit, numShots: int=10, isPhysical: bool=False, hasNoise: bool=False):
-
     # Define which backend to use
     if isPhysical:
-        service = QiskitRuntimeService(channel="ibm_quantum", token=token)
+        service = QiskitRuntimeService(channel="ibm_quantum")
         backend = service.least_busy(operational=True, simulator=False)
     elif hasNoise:
         backend = FakeWashingtonV2()
@@ -245,7 +292,7 @@ def generate_seperation(moves: list[Move]) -> list[frozenset[int]]:
     return [frozenset(x) for x in qubit_set_list]
 
 # Circuit generators
-def generate_physical_circuit(moves: list[Move], measurement_axes: set[Axis] = set([Axis.X, Axis.Y, Axis.Z])) -> QuantumCircuit:
+def generate_physical_circuit(moves: list[Move], measurement_axes: set[Axis] = set([Axis.X, Axis.Y, Axis.Z])) -> tuple[QuantumCircuit, dict[int, int]]:
     # Count number of necessary qubits
     unique_qubits: set = set()
     for move in moves:
@@ -294,9 +341,9 @@ def generate_physical_circuit(moves: list[Move], measurement_axes: set[Axis] = s
     if Axis.Z in measurement_axes:
         qc.measure(qReg_z, cReg_z)
 
-    return qc
+    return (qc, mapping_bq)
 
-def generate_simulator_circuits(moves: list[Move]) -> list[list[QuantumCircuit]]:
+def generate_simulator_circuits(moves: list[Move]) -> tuple[list[list[QuantumCircuit]], dict[int, int]]:
     qubit_set_list: list[frozenset[int]] = generate_seperation(moves)
 
     # For each set, find the moves that affect it
@@ -312,28 +359,37 @@ def generate_simulator_circuits(moves: list[Move]) -> list[list[QuantumCircuit]]
                 print("ERROR")
 
     qcs_x, qcs_y, qcs_z = list(), list(), list()
+    mapping_bq: dict[int, int] = dict()
     for move_sublist in moves_per_set.values():
         for qcs, axis in [(qcs_x, Axis.X), (qcs_y, Axis.Y), (qcs_z, Axis.Z)]:
-            qcs.append(generate_physical_circuit(move_sublist, set([axis])))
+            (qc, mapping_bq_temp) = generate_physical_circuit(move_sublist, set([axis]))
+            qcs.append(qc)
+
+            if axis == Axis.X:
+                # Merge mappings (increase each value by number of keys in final mapping)
+                offset: int = len(mapping_bq.keys())
+                for k, v in mapping_bq_temp.items():
+                    mapping_bq[k] = v + offset
+
         
-    return [qcs_x, qcs_y, qcs_z]
+    return ([qcs_x, qcs_y, qcs_z], mapping_bq)
         
-def run_moves(moves: list[Move], isPhysical = False):
+def run_moves(moves: list[Move], numShots: int = 1, isPhysical: bool = False) -> tuple[tuple[str, str, str], dict[int, int]]:
     if isPhysical:
-        qc = generate_physical_circuit(moves)
-        result = run_circuit(qc, 1, False)
+        (qc, mapping_bq) = generate_physical_circuit(moves)
+        result = run_circuit(qc, numShots, False)
         data = result[0].data
         cReg_x = data.cReg_x.array
         cReg_y = data.cReg_y.array
         cReg_z = data.cReg_z.array
-        return (cReg_x, cReg_y, cReg_z)
+        return ((cReg_x, cReg_y, cReg_z), mapping_bq)
     else:
-        qcs = generate_simulator_circuits(moves)
+        (qcs, mapping_bq) = generate_simulator_circuits(moves)
         results = []
         for i in range(3):
-            results.append([run_circuit(qc, 1)[0].data for qc in qcs[i]])
+            results.append([run_circuit(qc, numShots)[0].data for qc in qcs[i]])
 
-        cReg_x = BitArray.concatenate_bits([i.cReg_x for i in results[0]]).array
-        cReg_y = BitArray.concatenate_bits([i.cReg_y for i in results[1]]).array
-        cReg_z = BitArray.concatenate_bits([i.cReg_z for i in results[2]]).array
-        return (cReg_x, cReg_y, cReg_z)
+        cReg_x = BitArray.concatenate_bits([i.cReg_x for i in results[0]]).get_bitstrings()
+        cReg_y = BitArray.concatenate_bits([i.cReg_y for i in results[1]]).get_bitstrings()
+        cReg_z = BitArray.concatenate_bits([i.cReg_z for i in results[2]]).get_bitstrings()
+        return ((cReg_x, cReg_y, cReg_z), mapping_bq)
