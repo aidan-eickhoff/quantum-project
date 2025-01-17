@@ -44,7 +44,9 @@ class RX(Gate):
         self.target = qubits[0]
 
     def __str__(self) -> str:
-        return "RX: " + str(self.slots[0])
+        x_pos = self.slots[0] % 7
+        y_pos = int((self.slots[0] - x_pos) / 7)
+        return "RX: (" + str(x_pos) + "," + str(y_pos) + ")"
 
     def addToQc(self, qc: QuantumCircuit, mapping_bq: dict[int, int], regs: list[QuantumRegister]):
         for qReg in regs: qc.rx(self.angle, qReg[mapping_bq[self.target]]) 
@@ -74,7 +76,9 @@ class RZ(Gate):
         self.target = qubits[0]
 
     def __str__(self) -> str:
-        return "RZ: " + str(self.slots[0])
+        x_pos = self.slots[0] % 7
+        y_pos = int((self.slots[0] - x_pos) / 7)
+        return "RZ: (" + str(x_pos) + "," + str(y_pos) + ")"
 
     def addToQc(self, qc: QuantumCircuit, mapping_bq: dict[int, int], regs: list[QuantumRegister]):
         for qReg in regs: qc.rz(self.angle, qReg[mapping_bq[self.target]]) 
@@ -93,7 +97,9 @@ class RV(Gate):
         self.target = qubits[0]
 
     def __str__(self) -> str:
-        return "RZ: " + str(self.slots[0])
+        x_pos = self.slots[0] % 7
+        y_pos = int((self.slots[0] - x_pos) / 7)
+        return "RV: (" + str(x_pos) + "," + str(y_pos) + ")"
     
     def addToQc(self, qc: QuantumCircuit, mapping_bq: dict[int, int], regs: list[QuantumRegister]):
         for qReg in regs: qc.rv(*(self.rot_axis * self.rot_angle), qReg[mapping_bq[self.target]])
@@ -186,7 +192,12 @@ class CRY(Gate):
         self.angle = angle     
 
     def __str__(self) -> str:
-        return "CRY, control: " + str(self.control) +", target: " + str(self.target)
+        c_x_pos = self.control % 7
+        c_y_pos = int((self.control - c_x_pos) / 7)
+        t_x_pos = self.target % 7
+        t_y_pos = int((self.target - t_x_pos) / 7)
+
+        return "CRY: control=(" + str(c_x_pos) + "," + str(c_y_pos) + "), target=" + "(" + str(t_x_pos) + "," + str(t_y_pos) + ")"
 
     def addToQc(self, qc: QuantumCircuit, mapping_bq: dict[int, int], regs: list[QuantumRegister]):
         for qReg in regs: qc.cry(self.angle, qReg[mapping_bq[self.control]], qReg[mapping_bq[self.target]])

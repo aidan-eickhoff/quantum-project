@@ -8,11 +8,12 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 class BlochVisualizer:
     def __init__(self, parent):
         self.container = tk.Frame(parent)
-        self.spheres: list[list[qutip.Bloch]] = [[self.make_bloch_sphere(i, j) for i in range(7)] for j in range(6)]
-                
+        self.bloch_height: int = int(parent.winfo_screenheight()/7)
 
+        self.spheres: list[list[qutip.Bloch]] = [[self.make_bloch_sphere(i, j) for i in range(7)] for j in range(6)]
+        
     def make_bloch_sphere(self, col: int, row: int) -> qutip.Bloch:
-        fig = Figure(figsize = (1, 1), dpi = 150)
+        fig = Figure(figsize = (1, 1), dpi=self.bloch_height)
         
         b = qutip.Bloch(fig)
 
@@ -31,6 +32,6 @@ class BlochVisualizer:
 
     def set_vector(self, col: int, row: int, vector: np.ndarray):
         self.spheres[col][row].clear()
-        self.spheres[col][row].add_vectors(1.1*vector);
-        self.spheres[col][row].render();
+        self.spheres[col][row].add_vectors(1.1*vector)
+        self.spheres[col][row].render()
 
