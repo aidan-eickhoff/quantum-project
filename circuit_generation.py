@@ -33,6 +33,25 @@ class Axis():
         self.O = np.array([0,0,0])
 Axis = Axis()
 
+# Measurement 
+class Meas(Gate):
+    def __init__(self, axis: np.array, qubits: list[int]):
+        super().__init__(qubits)
+        self.axis = axis
+        self.targets = qubits
+    
+    def __str__(self) -> str:
+        return "Meas: Axis=(" + str(self.axis) + ")"
+
+    def addToQc(self, qc: QuantumCircuit, mapping_bq: dict[int, int], regs: list[QuantumRegister]):
+        for qReg in regs:
+            for t in self.targets:
+                rot_axis = (Axis.Z + self.axis)
+                rot_axis /= np.linalg.norm(rot_axis)
+                qc.rv(*(rot_axis * np.pi), qReg[mapping_bq[t]]) # Add correct rotation to circuit
+                qc.measure(qReg[mapping_bq[t]], ClassicalRegister(1, "useless"))
+                qc.rv(*(rot_axis * np.pi), qReg[mapping_bq[t]]) # Reverse correct rotation to circuit
+
 # 1 qubit gates
 class RX(Gate):
     def __init__(self, angle: float, qubits: list[int]):
@@ -99,7 +118,7 @@ class RV(Gate):
     def __str__(self) -> str:
         x_pos = self.slots[0] % 7
         y_pos = int((self.slots[0] - x_pos) / 7)
-        return "RV: (" + str(x_pos) + "," + str(y_pos) + ")"
+        return "RV: Slot=(" + str(x_pos) + "," + str(y_pos) + "), Axis=(" + str(self.rot_axis) + ")"
     
     def addToQc(self, qc: QuantumCircuit, mapping_bq: dict[int, int], regs: list[QuantumRegister]):
         for qReg in regs: qc.rv(*(self.rot_axis * self.rot_angle), qReg[mapping_bq[self.target]])
@@ -288,6 +307,9 @@ def generate_seperation(moves: list[Move]) -> list[frozenset[int]]:
     # For each move, union the sets of the qubits it contains
     for move in moves:
         # Find sets containing used qubits
+        if len(move.gate.slots) < 2:
+            continue
+
         sets = list()
         for qubit in move.gate.slots:
             for qubit_set in qubit_set_list:
@@ -332,7 +354,7 @@ def generate_physical_circuit(moves: list[Move], measurement_axes: list[np.array
         cRegs.append(ClassicalRegister(q_num, f"cReg_{index}"))
 
     # Add gates to the circuit
-    qc = QuantumCircuit(*qRegs, *cRegs)
+    qc = QuantumCircuit(*qRegs, *cRegs, ClassicalRegister(1, "useless"))
     for move in moves:
         move.gate.addToQc(qc, mapping_bq, qRegs)
 
@@ -342,6 +364,7 @@ def generate_physical_circuit(moves: list[Move], measurement_axes: list[np.array
         rot_axis /= np.linalg.norm(rot_axis)
         qc.rv(*(rot_axis * np.pi), QuantumRegister(q_num, f"qReg_{index}")) # Add correct rotation to circuit
         qc.measure(QuantumRegister(q_num, f"qReg_{index}"), ClassicalRegister(q_num, f"cReg_{index}"))
+        qc.rv(*(rot_axis * np.pi), QuantumRegister(q_num, f"qReg_{index}")) # Reverse correct rotation to circuit
 
     return (qc, mapping_bq)
 
@@ -391,6 +414,6 @@ def run_moves(moves: list[Move], numShots: int = 1, isPhysical: bool = False) ->
 
         # Add a list of all results for each axis to `results` 
         for i in range(3):
-            results.append([run_circuit(qc, numShots*100)[0].data for qc in qcs[i]])
+            results.append([run_circuit(qc, numShots)[0].data for qc in qcs[i]])
 
         return (tuple([BitArray.concatenate_bits([res.cReg_0 for res in axisResults]) for axisResults in results]), mapping_bq)

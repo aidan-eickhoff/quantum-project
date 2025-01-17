@@ -48,9 +48,8 @@ class BoardState():
         if target_turn is None:
             target_turn = len(self.moves)
         if target_turn <= self.last_collapsed_move:
-            print("Error, collapsing moves which are already collapsed")
-            return
-        return circuit_generation.run_moves(self.moves[self.last_collapsed_move: target_turn], 1000)
+            raise Exception("Error, collapsing moves which are already collapsed")
+        return circuit_generation.run_moves(self.moves[self.last_collapsed_move: target_turn], 100)
 
 class tkinterHandler():
     def __init__(self):
@@ -81,13 +80,13 @@ class tkinterHandler():
         self.update_board(*self.board_state.collapse_event())
 
     def update_board(self, measurements: tuple[BitArray, BitArray, BitArray], mapping_bq: dict[int, int]):
-        for i in range(7):
-            for j in range(6):
-                qb_num = 7 * i + j
+        for col in range(7):
+            for row in range(6):
+                qb_num = 7 * row + col
                 if qb_num not in mapping_bq.keys():
                     continue
 
-                self.bloch_visualizer.set_vector(i, j, np.array([
+                self.bloch_visualizer.set_vector(col, row, np.array([
                     np.mean(np.array(list(map(list, measurements[i].get_bitstrings())))[:,-1 - mapping_bq[qb_num]].astype(np.float64) * -2. + 1) for i in range(3)
                 ]))
 
