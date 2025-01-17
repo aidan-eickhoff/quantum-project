@@ -5,6 +5,7 @@ from bloch import BlochVisualizer
 from recent_moves import Recent_moves_list
 import circuit_generation
 from qiskit.primitives.containers import BitArray
+import platform
 
 class BoardState():
     def __init__(self):
@@ -54,8 +55,13 @@ class BoardState():
 class tkinterHandler():
     def __init__(self):
         self.main_window = tkinter.Tk()
-        # fit the window to the screen
-        # self.main_window.state('zoomed')
+        # fit the window to the screen -- I <3 platform dependent code!
+        if platform.system() == 'Linux':
+            self.main_window.attributes('-zoomed', True)
+            self.main_window.update()
+        else:
+            self.main_window.state('zoomed')
+            
 
         # create drawable canvas
         self.bloch_visualizer = BlochVisualizer(self.main_window)
@@ -99,6 +105,7 @@ class tkinterHandler():
                     break
         else:
             self.update_board(*self.board_state.collapse_event())
+
 
     def update_board(self, measurements: tuple[BitArray, BitArray, BitArray], mapping_bq: dict[int, int]):
         qubit_sets: list[frozenset[int]] = circuit_generation.generate_seperation(self.board_state.moves)
