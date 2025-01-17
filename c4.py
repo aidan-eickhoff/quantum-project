@@ -3,6 +3,7 @@ import numpy as np
 from gui.input_panel import Input_panel
 from bloch import BlochVisualizer
 import circuit_generation
+from qiskit.primitives.containers import BitArray
 
 class BoardState():
     def __init__(self):
@@ -73,19 +74,16 @@ class tkinterHandler():
         self.board_state.moves.append(self.input_panel.get_move())
         self.update_board(*self.board_state.collapse_event())
 
-    def update_board(self, measurements: tuple[str, str, str], mapping_bq: dict[int, int]):
+    def update_board(self, measurements: tuple[BitArray, BitArray, BitArray], mapping_bq: dict[int, int]):
         for i in range(7):
             for j in range(6):
                 qb_num = 7 * i + j
                 if qb_num not in mapping_bq.keys():
                     continue
-                np.mean(np.array(list(map(list, measurements[0])))[:,-1 - mapping_bq[qb_num]].astype(np.float64) * 2. - 1)
+
                 self.bloch_visualizer.set_vector(i, j, np.array([
-                    np.mean(np.array(list(map(list, measurements[0])))[:,-1 - mapping_bq[qb_num]].astype(np.float64) * -2. + 1),
-                    np.mean(np.array(list(map(list, measurements[1])))[:,-1 - mapping_bq[qb_num]].astype(np.float64) * -2. + 1),
-                    np.mean(np.array(list(map(list, measurements[2])))[:,-1 - mapping_bq[qb_num]].astype(np.float64) * -2. + 1)
+                    np.mean(np.array(list(map(list, measurements[i].get_bitstrings())))[:,-1 - mapping_bq[qb_num]].astype(np.float64) * -2. + 1) for i in range(3)
                 ]))
-                # self.bloch_visualizer.set_vector(i, j, np.array(list(map(float, [measurements[0][0][mapping_bq[qb_num]] * 2 - 1, measurements[1][0][mapping_bq[qb_num]] * 2 - 1, measurements[1][0][mapping_bq[qb_num]] * 2 - 1]))))
 
 
 if __name__ == "__main__":

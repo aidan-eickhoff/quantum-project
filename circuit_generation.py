@@ -7,7 +7,6 @@ from qiskit_ibm_runtime import QiskitRuntimeService, SamplerOptions, SamplerV2 a
 from qiskit_ibm_runtime.fake_provider import *
 
 from abc import ABC, abstractmethod
-from enum import Enum
 import numpy as np
 
 # Superclasses
@@ -26,10 +25,13 @@ class Gate(ABC):
     def addToQc(self, qc: QuantumCircuit, mapping_bq: dict[int, int], regs: list[QuantumRegister]):
         pass
 
-class Axis(Enum):
-    X = 0
-    Y = 1
-    Z = 2
+class Axis():
+    def __init__(self):
+        self.X = np.array([1,0,0])
+        self.Y = np.array([0,1,0])
+        self.Z = np.array([0,0,1])
+        self.O = np.array([0,0,0])
+Axis = Axis()
 
 # 1 qubit gates
 class RX(Gate):
@@ -295,8 +297,11 @@ def generate_seperation(moves: list[Move]) -> list[frozenset[int]]:
     return [frozenset(x) for x in qubit_set_list]
 
 # Circuit generators
-def generate_physical_circuit(moves: list[Move], measurement_axes: set[Axis] = set([Axis.X, Axis.Y, Axis.Z])) -> tuple[QuantumCircuit, dict[int, int]]:
-    # Count number of necessary qubits
+def generate_physical_circuit(moves: list[Move], measurement_axes: list[np.array] = [Axis.Z]) -> tuple[QuantumCircuit, dict[int, int]]:
+    # Normalize and index measurement axes
+    indexed_measurement_axes = lambda: enumerate([axis / np.linalg.norm(axis) for axis in measurement_axes])
+
+    # Count number of necessary qubits (inefficiently)
     unique_qubits: set = set()
     for move in moves:
         for qubit in move.gate.slots:
@@ -306,43 +311,26 @@ def generate_physical_circuit(moves: list[Move], measurement_axes: set[Axis] = s
 
     # Create quantum circuit
     q_num = len(unique_qubits)
-    qReg_x = QuantumRegister(q_num, "qReg_x")
-    cReg_x = ClassicalRegister(q_num, "cReg_x")
-    qReg_y = QuantumRegister(q_num, "qReg_y")
-    cReg_y = ClassicalRegister(q_num, "cReg_y")
-    qReg_z = QuantumRegister(q_num, "qReg_z")
-    cReg_z = ClassicalRegister(q_num, "cReg_z")
+
+    qRegs: list[QuantumRegister] = list()
+    cRegs: list[ClassicalRegister] = list()
     
-    regs: list[Register] = []
-    qRegs: list[QuantumRegister] = []
-    if Axis.X in measurement_axes:
-        regs.append(qReg_x)
-        regs.append(cReg_x)
-        qRegs.append(qReg_x)
-    if Axis.Y in measurement_axes:
-        regs.append(qReg_y)
-        regs.append(cReg_y)
-        qRegs.append(qReg_y)
-    if Axis.Z in measurement_axes:
-        regs.append(qReg_z)
-        regs.append(cReg_z)
-        qRegs.append(qReg_z)
+    # Create registers
+    for index, axis in indexed_measurement_axes():
+        qRegs.append(QuantumRegister(q_num, f"qReg_{index}"))
+        cRegs.append(ClassicalRegister(q_num, f"cReg_{index}"))
 
     # Add gates to the circuit
-    qc = QuantumCircuit(*regs)
+    qc = QuantumCircuit(*qRegs, *cRegs)
     for move in moves:
         move.gate.addToQc(qc, mapping_bq, qRegs)
 
     # Add measurements
-    if Axis.X in measurement_axes:
-        qc.h(qReg_x)
-        qc.measure(qReg_x, cReg_x)
-    if Axis.Y in measurement_axes:
-        v = np.pi/np.sqrt(2)
-        qc.rv(0, v, v, qReg_y)
-        qc.measure(qReg_y, cReg_y)
-    if Axis.Z in measurement_axes:
-        qc.measure(qReg_z, cReg_z)
+    for index, axis in indexed_measurement_axes():
+        rot_axis = (Axis.Z + axis)
+        rot_axis /= np.linalg.norm(rot_axis)
+        qc.rv(*(rot_axis * np.pi), QuantumRegister(q_num, f"qReg_{index}")) # Add correct rotation to circuit
+        qc.measure(QuantumRegister(q_num, f"qReg_{index}"), ClassicalRegister(q_num, f"cReg_{index}"))
 
     return (qc, mapping_bq)
 
@@ -359,16 +347,16 @@ def generate_simulator_circuits(moves: list[Move]) -> tuple[list[list[QuantumCir
 
             elif any(s in qubit_set for s in move.gate.slots):
                 # This should not happen
-                print("ERROR")
+                raise Exception("Not all qubits of a move were in the same set after seperation")
 
     qcs_x, qcs_y, qcs_z = list(), list(), list()
     mapping_bq: dict[int, int] = dict()
     for move_sublist in moves_per_set.values():
         for qcs, axis in [(qcs_x, Axis.X), (qcs_y, Axis.Y), (qcs_z, Axis.Z)]:
-            (qc, mapping_bq_temp) = generate_physical_circuit(move_sublist, set([axis]))
+            (qc, mapping_bq_temp) = generate_physical_circuit(move_sublist, [axis])
             qcs.append(qc)
 
-            if axis == Axis.X:
+            if np.array_equal(axis, Axis.X):
                 # Merge mappings (increase each value by number of keys in final mapping)
                 offset: int = len(mapping_bq.keys())
                 for k, v in mapping_bq_temp.items():
@@ -377,22 +365,21 @@ def generate_simulator_circuits(moves: list[Move]) -> tuple[list[list[QuantumCir
         
     return ([qcs_x, qcs_y, qcs_z], mapping_bq)
         
-def run_moves(moves: list[Move], numShots: int = 1, isPhysical: bool = False) -> tuple[tuple[str, str, str], dict[int, int]]:
+def run_moves(moves: list[Move], numShots: int = 1, isPhysical: bool = False) -> tuple[tuple[BitArray, BitArray, BitArray], dict[int, int]]:
     if isPhysical:
-        (qc, mapping_bq) = generate_physical_circuit(moves)
-        result = run_circuit(qc, numShots, False)
+        (qc, mapping_bq) = generate_physical_circuit(moves, [Axis.X, Axis.Y, Axis.Z])
+        result = run_circuit(qc, numShots, False) # Change this False to True to run on IBM
         data = result[0].data
-        cReg_x = data.cReg_x.array
-        cReg_y = data.cReg_y.array
-        cReg_z = data.cReg_z.array
+        cReg_x = data.cReg_0
+        cReg_y = data.cReg_1
+        cReg_z = data.cReg_2
         return ((cReg_x, cReg_y, cReg_z), mapping_bq)
     else:
         (qcs, mapping_bq) = generate_simulator_circuits(moves)
-        results = []
-        for i in range(3):
-            results.append([run_circuit(qc, numShots)[0].data for qc in qcs[i]])
+        results = list()
 
-        cReg_x = BitArray.concatenate_bits([i.cReg_x for i in results[0]]).get_bitstrings()
-        cReg_y = BitArray.concatenate_bits([i.cReg_y for i in results[1]]).get_bitstrings()
-        cReg_z = BitArray.concatenate_bits([i.cReg_z for i in results[2]]).get_bitstrings()
-        return ((cReg_x, cReg_y, cReg_z), mapping_bq)
+        # Add a list of all results for each axis to `results` 
+        for i in range(3):
+            results.append([run_circuit(qc, numShots*100)[0].data for qc in qcs[i]])
+
+        return (tuple([BitArray.concatenate_bits([res.cReg_0 for res in axisResults]) for axisResults in results]), mapping_bq)
