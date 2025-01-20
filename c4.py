@@ -75,9 +75,21 @@ class tkinterHandler():
 
     # submit button click calls this method
     def add_move(self):
-        self.board_state.moves.append(self.input_panel.get_move())
-        self.recent_moves_list.add_move(self.input_panel.get_move())
-        self.update_board(*self.board_state.collapse_event())
+        m: circuit_generation.Move = self.input_panel.get_move()
+        self.board_state.moves.append(m)
+        self.recent_moves_list.add_move(m)
+
+        # We will be collapsing one qubit and all of its entangled partners
+        if isinstance(m.gate, circuit_generation.Coll):
+            (measurements, mapping_bq) = self.board_state.collapse_event()
+            qubit_sets = circuit_generation.generate_seperation(self.board_state.moves)
+            for s in qubit_sets:
+                if m.gate.slots in s:
+                    # Collapse this set here, but lunch now
+                    # Make sure the board remembers that these are collapsed or something?
+                    break
+        else:
+            self.update_board(*self.board_state.collapse_event())
 
     def update_board(self, measurements: tuple[BitArray, BitArray, BitArray], mapping_bq: dict[int, int]):
         for col in range(7):

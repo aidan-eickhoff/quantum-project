@@ -1,14 +1,16 @@
 from enum import Enum
 import tkinter
 # requires gui package as main python file is outside of package
+from gui.collapse_input import Collapse_input
 from gui.rotation_input import Rotation_input
 from gui.CY_input import CY_input
-from gui.measure_input import Measure_Input
+from gui.measure_input import Measure_input
 
 class MoveType(Enum):
     RV = 'rv'
     CY = 'cy'
     MEAS = 'meas'
+    COLLAPSE = 'collapse'
 
 class Input_panel():
     def __init__(self, parent, add_move):
@@ -21,8 +23,10 @@ class Input_panel():
         self.rotation_input = Rotation_input(self.move_type_container)
         self.control_y_input = CY_input(self.move_type_container)
         self.control_y_input.container.pack_forget() # hides CY input
-        self.measure_input = Measure_Input(self.move_type_container)
+        self.measure_input = Measure_input(self.move_type_container)
         self.measure_input.container.pack_forget()
+        self.collapse_input = Collapse_input(self.move_type_container)
+        self.collapse_input.container.pack_forget()
 
         #switch move buttons
         self.move_select_container = tkinter.Frame(self.container, borderwidth=2, relief=tkinter.RIDGE)
@@ -40,6 +44,10 @@ class Input_panel():
         self.move_type_measure = tkinter.Button(self.move_select_container, text='Measure move', command=lambda: self.show_type_input(MoveType.MEAS))
         self.move_type_measure.grid(row=2, column=0, sticky="ew")
         self.move_type_select_buttons.append(self.move_type_measure)
+
+        self.move_type_collapse = tkinter.Button(self.move_select_container, text='collapse', command=lambda: self.show_type_input(MoveType.COLLAPSE))
+        self.move_type_collapse.grid(row=3, column=0, sticky="ew")
+        self.move_type_select_buttons.append(self.move_type_collapse)
 
         self.move_select_container.grid(row=0, column=0, sticky="ns")
 
@@ -68,7 +76,9 @@ class Input_panel():
             case MoveType.MEAS:
                 self.move_type_measure["state"] = "disabled"
                 self.measure_input.container.pack()
-
+            case MoveType.COLLAPSE:
+                self.move_type_collapse["state"] = "disabled"
+                self.collapse_input.container.pack()
 
     def get_move(self):
         match self.move_type:
@@ -78,3 +88,5 @@ class Input_panel():
                 return self.control_y_input.get_move()
             case MoveType.MEAS:
                 return self.measure_input.get_move()
+            case MoveType.COLLAPSE:
+                return self.collapse_input.get_move()

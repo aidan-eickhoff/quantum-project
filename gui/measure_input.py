@@ -2,7 +2,7 @@ import tkinter
 import circuit_generation
 import numpy as np
 
-class Measure_Input():
+class Measure_input():
     def __init__(self, parent):
         self.container = tkinter.Frame(parent)
         self.meas_x = tkinter.StringVar()
@@ -13,7 +13,7 @@ class Measure_Input():
         self.cell_y = tkinter.StringVar()
 
 
-        self.cell_label = tkinter.Label(self.container,text='Rotation move')
+        self.cell_label = tkinter.Label(self.container,text='Measurement move')
         self.cell_label.grid(row=0,column=0, columnspan=2)
 
         self.cell_label = tkinter.Label(self.container,text='Measuring vector (X,Y,Z)')
@@ -27,10 +27,10 @@ class Measure_Input():
 
         self.cell_label = tkinter.Label(self.container,text='Cell (X,Y)')
         self.cell_label.grid(row=1,column=1)
-        self.meas_x_input = tkinter.Entry(self.container, textvariable=self.cell_x)
-        self.meas_x_input.grid(row=2,column=1)
-        self.meas_y_input = tkinter.Entry(self.container, textvariable=self.cell_y)
-        self.meas_y_input.grid(row=3,column=1)
+        self.cell_x_input = tkinter.Entry(self.container, textvariable=self.cell_x)
+        self.cell_x_input.grid(row=2,column=1)
+        self.cell_y_input = tkinter.Entry(self.container, textvariable=self.cell_y)
+        self.cell_y_input.grid(row=3,column=1)
 
 
         self.container.pack()
