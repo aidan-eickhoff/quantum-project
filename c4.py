@@ -83,9 +83,12 @@ class tkinterHandler():
         if isinstance(m.gate, circuit_generation.Coll):
             (measurements, mapping_bq) = self.board_state.collapse_event()
             qubit_sets = circuit_generation.generate_seperation(self.board_state.moves)
-            for s in qubit_sets:
-                if m.gate.slots in s:
-                    # Collapse this set here, but lunch now
+            for qubit_set in qubit_sets:
+                if all(s in qubit_set for s in m.gate.slots):
+                    # Collapse all qubits in this set according to their measurements
+                    for axis in measurements:
+                        axis.get_bitstrings()[0][mapping_bq[]]
+
                     # Make sure the board remembers that these are collapsed or something?
                     break
         else:
