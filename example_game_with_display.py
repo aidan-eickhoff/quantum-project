@@ -290,6 +290,54 @@ events_example4 = [
      "collapse turn": "Y1"}
 ]
 
+events_bart1 = [
+     {'type': 'superposition',
+      "distribution": [0,0,0,1,0,0,0]},
+      {'type': 'superposition',
+       'distribution': [0,0,0.33,0.34,0.33,0,0]},
+       {'type': 'superposition',
+       'distribution': [0,0,0.25,0.5,0.25,0,0]},
+       {'type': 'superposition',
+       'distribution': [0,0,0.25,0.5,0.25,0,0]},
+       {'type': 'superposition', #R3
+       'distribution': [0,0,0,0.5,0.5,0,0]},
+       {"type": 'entanglement',
+        "entangled with": 'R3',
+        'distribution': [None,None,3,None,None,4,None]},
+    {'type': 'superposition', #R4
+       'distribution': [0,0,0,0.2,0.4,0.4,0]},
+    {'type': 'superposition', # mark
+       'distribution': [0,0.3,0.4,0,0,0.3,0]},
+       {'type': 'superposition',
+       'distribution': [0,0,0,0.0,0.34,0.33,0.33]},
+    {'type': 'collapse', 
+     "Final position": 2,
+     "collapse turn": "Y1"},
+     {'type': 'superposition',#Y5
+       'distribution': [0,0,0.5,0.3,0.2,0,0]},
+        {'type': 'collapse',
+     "Final position": 3,
+     "collapse turn": "R2"},
+            {"type": 'entanglement', #R6
+        "entangled with": 'R3',
+        'distribution': [None,None,3,None,4,None,None]},
+        {'type': 'collapse',
+     "Final position": 3,
+     "collapse turn": "Y2"},
+    {'type': 'superposition', #Y6
+       'distribution': [0.1,0,0,0,0.8,0.1,0]},
+    {'type': 'collapse',
+     "Final position": 3,
+     "collapse turn": "R3"},
+     {'type': 'superposition', #R7
+       'distribution': [0,0,0,0,0.75,0.25,0]},
+     {'type': 'superposition', # mark
+       'distribution': [0,0,0,0,0.75,0.25,0]},
+        {'type': 'collapse',
+     "Final position": 5,
+     "collapse turn": "R4"},
+]
+
 class Chip:
     def __init__(self, color:str, move:str):
         self.color = color # "R" or "Y"
@@ -375,8 +423,9 @@ def flatten_nested_list(nested_list):
 
 ########################################################################################################
 # Pick your example:
-events = events_practicegame
+# events = events_practicegame
 # events = events_example4
+events = events_bart1
 ########################################################################################################
 
 global collapses
