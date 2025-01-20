@@ -88,8 +88,8 @@ class tkinterHandler():
                     continue
 
                 self.bloch_visualizer.set_vector(i, j, np.array([
-                    np.mean(np.array(list(map(list, measurements[i].get_bitstrings())))[:,-1 - mapping_bq[qb_num]].astype(np.float64) * -2. + 1) for i in range(3)
-                ]))
+                    np.mean(np.array(list(map(list, measurements[k].get_bitstrings())))[:,-1 - mapping_bq[qb_num]].astype(np.float64) * -2. + 1) for k in range(3)
+                ]), len(self.board_state.moves))
 
 
 if __name__ == "__main__":

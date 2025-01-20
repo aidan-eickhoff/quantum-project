@@ -30,8 +30,26 @@ class BlochVisualizer:
 
         return b
 
-    def set_vector(self, col: int, row: int, vector: np.ndarray):
+    def set_vector(self, col: int, row: int, vector: np.ndarray, move_num: int):
+        # Get the current color scheme for the bloch vectors
+        existing_colors = self.spheres[col][row].vector_color
+        existing_colors_filtered = [x for x in existing_colors if x is not None]
+
         self.spheres[col][row].clear()
-        self.spheres[col][row].add_vectors(1.1*vector)
+        
+        if np.sum(vector**2) < 0.5: #bell state case
+            if len(existing_colors_filtered) == 0:
+                # create hex codes based on move number, RGB has 6 hex digits. thus modulo 256^3 is taken
+                vec_color = "#" + "%0.6X" % ((move_num * 127) % (256**3))
+                vec_color2 = "#" + "%0.6X" % ((move_num * 119) % (256**3))
+
+                self.spheres[col][row].vector_color = [vec_color, vec_color2]
+            else: # for when the bloch sphere was entangled in a previous move
+                self.spheres[col][row].vector_color = existing_colors_filtered
+
+            self.spheres[col][row].add_vectors(1.1*np.array([0.,0.,1.]))
+            self.spheres[col][row].add_vectors(1.1*np.array([0.,0.,-1.]))
+        else: # normal case
+            self.spheres[col][row].add_vectors(1.1*vector)
         self.spheres[col][row].render()
 
