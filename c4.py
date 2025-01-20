@@ -97,9 +97,21 @@ class tkinterHandler():
                 qb_num = 7 * row + col
                 if qb_num not in mapping_bq.keys():
                     continue
-
-                self.bloch_visualizer.set_vector(col, row, np.array([
-                    np.mean(np.array(list(map(list, measurements[i].get_bitstrings())))[:,-1 - mapping_bq[qb_num]].astype(np.float64) * -2. + 1) for i in range(3)
+                
+                # takes a length 3 np array representing a vector. We want to get the mean value of all the measurements in a certain axis
+                self.bloch_visualizer.set_vector(col, row, np.array([\
+                    # mean
+                    np.mean(
+                        # np array from python map object to allow for nice slicing & casting
+                        np.array(list(map(
+                            # map the bitstrings to arrays of characters using the list() method
+                            list, measurements[i].get_bitstrings())))
+                            # we get a 2d array out. the first dimension is the shot #, the second dimension is the result for qubit #n. 
+                            # since we want the average we need to keep all shots while selecting just a single qubit.
+                            # mapping_bq[qb_num] tells the virtual qubit number from the position on the board calculated above.
+                            [:,-1 - mapping_bq[qb_num]]
+                            # cast from char to float and convert digital measurements to correct locations on the bloch sphere
+                            .astype(np.float64) * -2. + 1) for i in range(3)
                 ]))
 
 
