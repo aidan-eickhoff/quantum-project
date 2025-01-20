@@ -49,7 +49,7 @@ class BoardState():
             target_turn = len(self.moves)
         if target_turn <= self.last_collapsed_move:
             raise Exception("Error, collapsing moves which are already collapsed")
-        return circuit_generation.run_moves(self.moves[self.last_collapsed_move: target_turn], 100)
+        return circuit_generation.run_moves(self.moves[self.last_collapsed_move: target_turn], 1000)
 
 class tkinterHandler():
     def __init__(self):
