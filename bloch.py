@@ -36,6 +36,10 @@ class BlochVisualizer:
         self.spheres[col][row].add_vectors(1.1*vector)
         self.spheres[col][row].render()
 
+    def set_color(self, col: int, row: int, color: str):
+        self.spheres[col][row].vector_color = [color]
+        self.spheres[col][row].render()
+
     def set_collapsed_color(self, col: int, row: int, is_red: bool):
         self.spheres[col][row].clear()
         self.spheres[col][row].sphere_alpha = 1
