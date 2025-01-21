@@ -119,6 +119,7 @@ class tkinterHandler():
                     # Find last X and Z measurement, we use these for determining fullness and color of a cell
                     measX = int(measurements[0].get_bitstrings()[0][-1 - mapping_bq[qubit]])
                     measZ = int(measurements[2].get_bitstrings()[0][-1 - mapping_bq[qubit]])
+                    
                     col = qubit % 7
                     row = int((qubit - col) / 7)
 
@@ -136,40 +137,42 @@ class tkinterHandler():
                     else: 
                         self.board_state.board[col][row] = 0
                     
-                    # Define a mapping to apply later
-                    mapping = [i for i in range(42)]
-                    # Apply gravity
-                    for col in range(7):
-                        lowest = 5
-                        # Find the lowest free spot
-                        for row in range(6):
-                            if self.board_state.board[col][row] == 0:
-                                lowest = row
-                                break
-                        # Fill free spots bottom up
-                        for row in range(lowest,6):
-                            if self.board_state.board[col][row] != 0:
-                                self.board_state.board[col][lowest] = self.board_state.board[col][row]
-                                mapping[7 * row + col] = 7 * lowest + col
-                                self.board_state.board[col][row] = 0
-                                self.bloch_visualizer.set_color(col, row, 'g')
-                                self.bloch_visualizer.set_vector(col, row, np.array([0, 0, 1.1]))
-                                lowest += 1
-                    # Apply coloring
-                    for col in range(7):
-                        for row in range(6):
-                            # if self.board_state.board
-                            if self.board_state.board[col][row] <= 0:
-                                continue
-                            self.bloch_visualizer.set_collapsed_color(col, row, self.board_state.board[col][row] == 1)
+                # Define a mapping to apply later
+                mapping = [i for i in range(42)]
+                # Apply gravity
+                for col in range(7):
+                    lowest = 5
+                    # Find the lowest free spot
+                    for row in range(6):
+                        if self.board_state.board[col][row] == 0:
+                            lowest = row
+                            break
+                    # Fill free spots bottom up
+                    for row in range(lowest,6):
+                        if self.board_state.board[col][row] == 0:
+                            continue
+                        self.board_state.board[col][lowest] = self.board_state.board[col][row]
+                        mapping[7 * row + col] = 7 * lowest + col
+                        self.board_state.board[col][row] = 0
+                        self.bloch_visualizer.set_color(col, row, 'g')
+                        lowest += 1
+                # Apply coloring
+                for col in range(7):
+                    for row in range(6):
+                        # if self.board_state.board
+                        if self.board_state.board[col][row] == 0:
+                            self.bloch_visualizer.set_vector(col, row, np.array([0, 0, 1.1]))
+                        if self.board_state.board[col][row] <= 0:
+                            continue
+                        self.bloch_visualizer.set_collapsed_color(col, row, self.board_state.board[col][row] == 1)
 
-                    # Apply mapping
-                    for move in self.board_state.moves:
-                        if all(s in qubit_set for s in move.gate.slots):
-                            move.collapsed = True
+                # Apply mapping
+                for move in self.board_state.moves:
+                    if all(s in qubit_set for s in move.gate.slots):
+                        move.collapsed = True
 
-                        for i,q in enumerate(move.gate.slots):
-                            move.gate.slots[i] = mapping[q]
+                    for i,q in enumerate(move.gate.slots):
+                        move.gate.slots[i] = mapping[q]
                             
         # Rerender the board
         self.update_board(*self.board_state.collapse_event())
