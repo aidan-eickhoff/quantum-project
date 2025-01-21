@@ -266,7 +266,7 @@ class SWAP(Gate):
         y_pos_control = int((self.slots[0] - x_pos_control) / 7)
         x_pos_target = self.slots[1] % 7
         y_pos_target = int((self.slots[1] - x_pos_target) / 7)
-        return "CRX: Control=(" + str(x_pos_control) + ", " + str(y_pos_control) + "), Target=(" + str(x_pos_target) + ", " + str(y_pos_target) + "), Angle=" + str(self.angle)
+        return "SWAP: Control=(" + str(x_pos_control) + ", " + str(y_pos_control) + "), Target=(" + str(x_pos_target) + ", " + str(y_pos_target) + ")"
 
     def addToQc(self, qc: QuantumCircuit, mapping_bq: dict[int, int], regs: list[QuantumRegister]):
         for qReg in regs: qc.swap(qReg[mapping_bq[self.slots[0]]], qReg[mapping_bq[self.slots[1]]])

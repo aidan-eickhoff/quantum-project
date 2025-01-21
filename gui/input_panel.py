@@ -54,7 +54,7 @@ class Input_panel():
         self.move_type_select_buttons.append(self.move_type_collapse)
 
         self.move_type_swap = tkinter.Button(self.move_select_container, text='Swap', command=lambda: self.show_type_input(MoveType.SWAP))
-        self.move_type_swap.grid(row=3, column=0, sticky="ew")
+        self.move_type_swap.grid(row=4, column=0, sticky="ew")
         self.move_type_select_buttons.append(self.move_type_swap)
 
         self.move_select_container.grid(row=0, column=0, sticky="ns")
@@ -97,6 +97,8 @@ class Input_panel():
                 return self.rotation_input.get_move()
             case MoveType.CRY:
                 return self.control_y_input.get_move()
+            case MoveType.SWAP:
+                return self.swap_input.get_move()
             case MoveType.MEAS:
                 return self.measure_input.get_move()
             case MoveType.COLLAPSE:
