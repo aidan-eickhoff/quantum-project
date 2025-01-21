@@ -62,7 +62,6 @@ class tkinterHandler():
         else:
             self.main_window.state('zoomed')
             
-
         # create drawable canvas
         self.bloch_visualizer = BlochVisualizer(self.main_window)
         self.input_panel = Input_panel(self.main_window, self.add_move)
