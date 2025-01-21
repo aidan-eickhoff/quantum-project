@@ -10,10 +10,6 @@ class BlochVisualizer:
         self.container = tk.Frame(parent)
         self.bloch_height: int = int(parent.winfo_screenheight()/7)
 
-<<<<<<< HEAD
-=======
-        self.tk_objects: list[list[FigureCanvasTkAgg]] = [[None for row in range(6)] for col in range(7)]
->>>>>>> 560546a (collapse colors)
         self.spheres: list[list[qutip.Bloch]] = [[self.make_bloch_sphere(col, row) for row in range(6)] for col in range(7)]
         
     def make_bloch_sphere(self, col: int, row: int) -> qutip.Bloch:
@@ -40,13 +36,10 @@ class BlochVisualizer:
         self.spheres[col][row].add_vectors(1.1*vector)
         self.spheres[col][row].render()
 
-<<<<<<< HEAD
     def set_color(self, col: int, row: int, color: str):
         self.spheres[col][row].vector_color = [color]
         self.spheres[col][row].render()
 
-=======
->>>>>>> 560546a (collapse colors)
     def set_collapsed_color(self, col: int, row: int, is_red: bool):
         self.spheres[col][row].clear()
         self.spheres[col][row].sphere_alpha = 1
@@ -56,8 +49,3 @@ class BlochVisualizer:
         self.spheres[col][row].ylabel = ['', '']
         self.spheres[col][row].zlabel = ['', '']
         self.spheres[col][row].render()
-<<<<<<< HEAD
-=======
-        # self.collapsed_canvas = tk.Canvas(self.container).grid()
-
->>>>>>> 560546a (collapse colors)
