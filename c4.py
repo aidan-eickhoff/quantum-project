@@ -9,7 +9,7 @@ from qiskit.primitives.containers import BitArray
 class BoardState():
     def __init__(self):
         self.board = np.zeros((7, 6))
-        self.moves = []
+        self.moves: list[circuit_generation.Move] = list()
         self.last_collapsed_move = 0
         self.total_move_number = 0
         self.red_turn = True
@@ -75,24 +75,86 @@ class tkinterHandler():
 
     # submit button click calls this method
     def add_move(self):
+        # Get move and add it to administration
         m: circuit_generation.Move = self.input_panel.get_move()
         self.board_state.moves.append(m)
         self.recent_moves_list.add_move(m)
 
-        # We will be collapsing one qubit and all of its entangled partners
+        # Mark all qubits in this move as "touched"
+        for qubit in m.gate.slots:
+            col = qubit % 7
+            row = int((qubit - col) / 7)
+            b = self.board_state.board
+            if b[col][row] > 0:
+                continue
+            b[col][row] = -1
+
+
+        # We will be collapsing one qubit and all of its entangled partners, if this is a collapse move
         if isinstance(m.gate, circuit_generation.Coll):
+            # Get measurements to collapse with
             (measurements, mapping_bq) = self.board_state.collapse_event()
             qubit_sets = circuit_generation.generate_seperation(self.board_state.moves)
-            for qubit_set in qubit_sets:
-                if all(s in qubit_set for s in m.gate.slots):
-                    # Collapse all qubits in this set according to their measurements
-                    for axis in measurements:
-                        axis.get_bitstrings()[0][mapping_bq[]]
 
-                    # Make sure the board remembers that these are collapsed or something?
-                    break
-        else:
-            self.update_board(*self.board_state.collapse_event())
+            # Find the set that was affected by our collapse move
+            for qubit_set in qubit_sets:
+                if not all(s in qubit_set for s in m.gate.slots):
+                    continue
+                # Collapse all qubits in this set according to their measurements
+                for qubit in qubit_set:
+                    # Find last X and Z measurement, we use these for determining fullness and color of a cell
+                    measX = int(measurements[0].get_bitstrings()[0][-1 - mapping_bq[qubit]])
+                    measZ = int(measurements[2].get_bitstrings()[0][-1 - mapping_bq[qubit]])
+                    col = qubit % 7
+                    row = int((qubit - col) / 7)
+
+                    # If a cell is already filled, don't empty or recolor it
+                    if self.board_state.board[col][row] > 0:
+                        continue
+
+                    # If cell full, red
+                    if measZ == 1 and measX == 0:
+                        self.board_state.board[col][row] = 2
+                    # Elif cell full, yellow
+                    elif measZ == 1 and measX == 1:
+                        self.board_state.board[col][row] = 1
+                    # Else cell empty
+                    else: 
+                        self.board_state.board[col][row] = 0
+                    
+                    # Define a mapping to apply later
+                    mapping = [i for i in range(42)]
+                    # Apply gravity
+                    for col in range(7):
+                        lowest = 5
+                        # Find the lowest free spot
+                        for row in range(6):
+                            if self.board_state.board[col][row] == 0:
+                                lowest = row
+                                break
+                        # Fill free spots bottom up
+                        for row in range(lowest+1,6):
+                            if self.board_state.board[col][row] != 0:
+                                self.board_state.board[col][lowest] = self.board_state.board[col][row]
+                                mapping[7*col + row] = 7*col + lowest
+                                self.board_state.board[col][row] = 0
+                                lowest += 1
+
+                    # Apply coloring
+                    for col in range(7):
+                        for row in range(6):
+                            if self.board_state.board[col][row] == 0:
+                                continue
+                            self.bloch_visualizer.set_collapsed_color(col, row, self.board_state.board[col][row] == 1)
+
+                    # Apply mapping :D
+                    for move in self.board_state.moves:
+                        if all(s in qubit_set for s in move.gate.slots):
+                            move.collapsed = True
+
+                        for i,q in enumerate(move.gate.slots):
+                            move.gate.slots[i] = mapping[q]
+        self.update_board(*self.board_state.collapse_event())
 
     def update_board(self, measurements: tuple[BitArray, BitArray, BitArray], mapping_bq: dict[int, int]):
         for col in range(7):

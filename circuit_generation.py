@@ -13,6 +13,7 @@ import numpy as np
 class Move():
     def __init__(self, gate: Gate):
         self.gate: Gate = gate
+        self.collapsed = False
 
     def __str__(self) -> str:
         return self.gate.__str__()
@@ -396,6 +397,8 @@ def generate_physical_circuit(moves: list[Move], measurement_axes: list[np.array
     # Add gates to the circuit
     qc = QuantumCircuit(*qRegs, *cRegs, ClassicalRegister(1, "useless"))
     for move in moves:
+        if move.collapsed:
+            continue
         move.gate.addToQc(qc, mapping_bq, qRegs)
 
     # Add measurements
