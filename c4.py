@@ -147,13 +147,15 @@ class tkinterHandler():
                                 continue
                             self.bloch_visualizer.set_collapsed_color(col, row, self.board_state.board[col][row] == 1)
 
-                    # Apply mapping :D
+                    # Apply mapping
                     for move in self.board_state.moves:
                         if all(s in qubit_set for s in move.gate.slots):
                             move.collapsed = True
 
                         for i,q in enumerate(move.gate.slots):
                             move.gate.slots[i] = mapping[q]
+                            
+        # Rerender the board
         self.update_board(*self.board_state.collapse_event())
 
     def update_board(self, measurements: tuple[BitArray, BitArray, BitArray], mapping_bq: dict[int, int]):

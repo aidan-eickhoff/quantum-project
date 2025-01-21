@@ -455,6 +455,9 @@ def run_moves(moves: list[Move], numShots: int = 1, isPhysical: bool = False) ->
         (qcs, mapping_bq) = generate_simulator_circuits(moves)
         results = list()
 
+        if qcs == [[], [], []]:
+            return tuple([BitArray([]) for i in range(3)], mapping_bq)
+
         # Add a list of all results for each axis to `results` 
         for i in range(3):
             results.append([run_circuit(qc, numShots)[0].data for qc in qcs[i]])
