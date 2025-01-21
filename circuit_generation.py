@@ -36,10 +36,10 @@ Axis = Axis()
 
 # Measurement & Collapse
 class Meas(Gate):
-    def __init__(self, axis: np.array, slots: list[int]):
-        super().__init__(slots)
+    def __init__(self, axis: np.array, qubits: list[int]):
+        super().__init__(qubits)
         self.axis = axis
-        self.target = slots
+        self.target = qubits
     
     def __str__(self) -> str:
         return "Meas: Axis=(" + str(self.axis) + ")"

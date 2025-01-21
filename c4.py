@@ -154,8 +154,7 @@ class tkinterHandler():
                                 self.board_state.board[col][row] = 0
                                 self.bloch_visualizer.set_color(col, row, 'g')
                                 lowest += 1
-                    print(self.board_state.board)
-                    print(mapping)
+
                     # Apply coloring
                     for col in range(7):
                         for row in range(6):
