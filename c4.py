@@ -5,6 +5,7 @@ from bloch import BlochVisualizer
 from recent_moves import Recent_moves_list
 import circuit_generation
 from qiskit.primitives.containers import BitArray
+import platform
 
 class BoardState():
     def __init__(self):
@@ -54,8 +55,13 @@ class BoardState():
 class tkinterHandler():
     def __init__(self):
         self.main_window = tkinter.Tk()
-        # fit the window to the screen
-        self.main_window.state('zoomed')
+        # fit the window to the screen -- I <3 platform dependent code!
+        if platform.system() == 'Linux':
+            self.main_window.attributes('-zoomed', True)
+            self.main_window.update()
+        else:
+            self.main_window.state('zoomed')
+            
 
         # create drawable canvas
         self.bloch_visualizer = BlochVisualizer(self.main_window)
@@ -68,6 +74,15 @@ class tkinterHandler():
 
         self.board_state: BoardState = BoardState()
 
+
+        self.vector_colors = [
+            "#FF5733", "#33FF57", "#3357FF", "#FF33A1", "#A133FF", "#33FFF5", "#F5FF33",
+            "#FF8C33", "#8CFF33", "#338CFF", "#FF338C", "#8C33FF", "#33FF8C", "#FF5733",
+            "#33FFDD", "#DD33FF", "#FFDD33", "#33A1FF", "#A1FF33", "#FF33DD", "#33FFA1",
+            "#FFD733", "#D733FF", "#33FFD7", "#5733FF", "#33D7FF", "#FF33A8", "#A833FF",
+            "#FFA833", "#33FFA8", "#FF3357", "#57FF33", "#A157FF", "#57FFA1", "#33A157",
+            "#FF7F50", "#6495ED", "#DC143C", "#00FA9A", "#FFD700", "#8A2BE2", "#20B2AA"
+        ]
 
     def show_window(self):
         self.main_window.mainloop()
@@ -158,7 +173,9 @@ class tkinterHandler():
         # Rerender the board
         self.update_board(*self.board_state.collapse_event())
 
+
     def update_board(self, measurements: tuple[BitArray, BitArray, BitArray], mapping_bq: dict[int, int]):
+        qubit_sets: list[frozenset[int]] = circuit_generation.generate_seperation(self.board_state.moves)
         for col in range(7):
             for row in range(6):
                 qb_num = 7 * row + col
@@ -180,6 +197,9 @@ class tkinterHandler():
                             # cast from char to float and convert digital measurements to correct locations on the bloch sphere
                             .astype(np.float64) * -2. + 1) for i in range(3)
                 ]))
+                for i, qb_set in enumerate(qubit_sets):
+                    if qb_num in qb_set:
+                        self.bloch_visualizer.set_color(col, row, self.vector_colors[i])
 
 
 if __name__ == "__main__":
