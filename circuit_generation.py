@@ -13,6 +13,7 @@ import numpy as np
 class Move():
     def __init__(self, gate: Gate):
         self.gate: Gate = gate
+        self.collapsed = False
 
     def __str__(self) -> str:
         return self.gate.__str__()
@@ -33,6 +34,38 @@ class Axis():
         self.O = np.array([0,0,0])
 Axis = Axis()
 
+# Measurement & Collapse
+class Meas(Gate):
+    def __init__(self, axis: np.array, qubits: list[int]):
+        super().__init__(qubits)
+        self.axis = axis
+        self.slots = qubits
+    
+    def __str__(self) -> str:
+        return "Meas: Axis=(" + str(self.axis) + ")"
+
+    def addToQc(self, qc: QuantumCircuit, mapping_bq: dict[int, int], regs: list[QuantumRegister]):
+        for qReg in regs:
+            for t in self.slots:
+                rot_axis = (Axis.Z + self.axis)
+                rot_axis /= np.linalg.norm(rot_axis)
+                qc.rv(*(rot_axis * np.pi), qReg[mapping_bq[t]]) # Add correct rotation to circuit
+                qc.measure(qReg[mapping_bq[t]], ClassicalRegister(1, "useless"))
+                qc.rv(*(rot_axis * np.pi), qReg[mapping_bq[t]]) # Reverse correct rotation to circuit
+
+class Coll(Gate):
+    def __init__(self, slots: list[int]):
+        super().__init__(slots)
+        self.slots = slots
+    
+    def __str__(self) -> str:
+        x_pos = self.slots[0] % 7
+        y_pos = int((self.slots[0] - x_pos) / 7)
+        return "Collapse: Cell=(" + str(x_pos) +", " + str(y_pos) + ")"
+
+    def addToQc(self, qc: QuantumCircuit, mapping_bq: dict[int, int], regs: list[QuantumRegister]):
+        pass
+
 # 1 qubit gates
 class RX(Gate):
     def __init__(self, angle: float, qubits: list[int]):
@@ -41,15 +74,14 @@ class RX(Gate):
             return
         super().__init__(qubits)
         self.angle: float = angle
-        self.target = qubits[0]
 
     def __str__(self) -> str:
         x_pos = self.slots[0] % 7
         y_pos = int((self.slots[0] - x_pos) / 7)
-        return "RX: (" + str(x_pos) + "," + str(y_pos) + ")"
+        return "RX: Cell=(" + str(x_pos) + ", " + str(y_pos) + "), Angle=" + str(self.angle)
 
     def addToQc(self, qc: QuantumCircuit, mapping_bq: dict[int, int], regs: list[QuantumRegister]):
-        for qReg in regs: qc.rx(self.angle, qReg[mapping_bq[self.target]]) 
+        for qReg in regs: qc.rx(self.angle, qReg[mapping_bq[self.slots[0]]]) 
 
 class RY(Gate):
     def __init__(self, angle: float, qubits: list[int]):
@@ -58,13 +90,14 @@ class RY(Gate):
             return
         super().__init__(qubits)
         self.angle: float = angle
-        self.target = qubits[0]
 
-    def __str__(self) -> str:
-        return "RY: " + str(self.slots[0])
+    def __str__(self):
+        x_pos = self.slots[0] % 7
+        y_pos = int((self.slots[0] - x_pos) / 7)
+        return "RY: Cell=(" + str(x_pos) + ", " + str(y_pos) + "), Angle=" + str(self.angle)
     
     def addToQc(self, qc: QuantumCircuit, mapping_bq: dict[int, int], regs: list[QuantumRegister]):
-        for qReg in regs: qc.ry(self.angle, qReg[mapping_bq[self.target]]) 
+        for qReg in regs: qc.ry(self.angle, qReg[mapping_bq[self.slots[0]]]) 
 
 class RZ(Gate):
     def __init__(self, angle: float, qubits: list[int]):
@@ -73,15 +106,14 @@ class RZ(Gate):
             return
         super().__init__(qubits)
         self.angle: float = angle
-        self.target = qubits[0]
 
-    def __str__(self) -> str:
+    def __str__(self):
         x_pos = self.slots[0] % 7
         y_pos = int((self.slots[0] - x_pos) / 7)
-        return "RZ: (" + str(x_pos) + "," + str(y_pos) + ")"
+        return "RZ: Cell=(" + str(x_pos) + ", " + str(y_pos) + "), Angle=" + str(self.angle)
 
     def addToQc(self, qc: QuantumCircuit, mapping_bq: dict[int, int], regs: list[QuantumRegister]):
-        for qReg in regs: qc.rz(self.angle, qReg[mapping_bq[self.target]]) 
+        for qReg in regs: qc.rz(self.angle, qReg[mapping_bq[self.slots[0]]]) 
 
 class RV(Gate):
     def __init__(self, rot_axis: np.array, rot_angle: float, qubits: list[int]):
@@ -94,15 +126,14 @@ class RV(Gate):
         super().__init__(qubits)
         self.rot_axis: np.array = rot_axis / np.linalg.norm(rot_axis)
         self.rot_angle: float = rot_angle
-        self.target = qubits[0]
 
     def __str__(self) -> str:
         x_pos = self.slots[0] % 7
         y_pos = int((self.slots[0] - x_pos) / 7)
-        return "RV: (" + str(x_pos) + "," + str(y_pos) + ")"
+        return "RV: Cell=(" + str(x_pos) + "," + str(y_pos) + "), Axis=(" + str(self.rot_axis) + "), Angle=" + str(self.rot_angle)
     
     def addToQc(self, qc: QuantumCircuit, mapping_bq: dict[int, int], regs: list[QuantumRegister]):
-        for qReg in regs: qc.rv(*(self.rot_axis * self.rot_angle), qReg[mapping_bq[self.target]])
+        for qReg in regs: qc.rv(*(self.rot_axis * self.rot_angle), qReg[mapping_bq[self.slots[0]]])
 
 class H(Gate):
     def __init__(self, qubits: list[int]):
@@ -111,13 +142,11 @@ class H(Gate):
             print("H gate should affect 1 qubit.")
             return
 
-        self.target = qubits[0]
-    
     def __str__(self) -> str:
-        return "H: " + str(self.target)
+        return "H: " + str(self.slots[0])
 
     def addToQc(self, qc: QuantumCircuit, mapping_bq: dict[int, int], regs: list[QuantumRegister]):
-        for qReg in regs: qc.h(qReg[mapping_bq[self.target]])
+        for qReg in regs: qc.h(qReg[mapping_bq[self.slots[0]]])
 
 # 2 qubit gates
 class CX(Gate):
@@ -125,45 +154,51 @@ class CX(Gate):
         if len(qubits) != 2:
             print("CX gate should affect 2 qubit.")
             return
-        super().__init__(qubits)
-        self.control = qubits[0]
-        self.target = qubits[1]        
+        super().__init__(qubits)   
 
     def __str__(self) -> str:
-        return "CX, control: " + str(self.control) +", target: " + str(self.target)
+        x_pos_control = self.slots[0] % 7
+        y_pos_control = int((self.slots[0] - x_pos_control) / 7)
+        x_pos_target = self.slots[1] % 7
+        y_pos_target = int((self.slots[1] - x_pos_target) / 7)
+        return "CX: Control=(" + str(x_pos_control) + ", " + str(y_pos_control) + "), Target=(" + str(x_pos_target) + ", " + str(y_pos_target) + ")"
 
     def addToQc(self, qc: QuantumCircuit, mapping_bq: dict[int, int], regs: list[QuantumRegister]):
-        for qReg in regs: qc.cx(qReg[mapping_bq[self.control]], qReg[mapping_bq[self.target]])
+        for qReg in regs: qc.cx(qReg[mapping_bq[self.slots[0]]], qReg[mapping_bq[self.slots[1]]])
 
 class CY(Gate):
     def __init__(self, qubits: list[int]):
         if len(qubits) != 2:
             print("CY gate should affect 2 qubit.")
             return
-        super().__init__(qubits)
-        self.control = qubits[0]
-        self.target = qubits[1]        
+        super().__init__(qubits)   
 
     def __str__(self) -> str:
-        return "CY, control: " + str(self.control) +", target: " + str(self.target)
+        x_pos_control = self.slots[0] % 7
+        y_pos_control = int((self.slots[0] - x_pos_control) / 7)
+        x_pos_target = self.slots[1] % 7
+        y_pos_target = int((self.slots[1] - x_pos_target) / 7)
+        return "CY: Control=(" + str(x_pos_control) + ", " + str(y_pos_control) + "), Target=(" + str(x_pos_target) + ", " + str(y_pos_target) + ")"
     
     def addToQc(self, qc: QuantumCircuit, mapping_bq: dict[int, int], regs: list[QuantumRegister]):
-        for qReg in regs: qc.cy(qReg[mapping_bq[self.control]], qReg[mapping_bq[self.target]])
+        for qReg in regs: qc.cy(qReg[mapping_bq[self.slots[0]]], qReg[mapping_bq[self.slots[1]]])
 
 class CZ(Gate):
     def __init__(self, qubits: list[int]):
         if len(qubits) != 2:
             print("CZ gate should affect 2 qubit.")
             return
-        super().__init__(qubits)
-        self.control = qubits[0]
-        self.target = qubits[1]        
+        super().__init__(qubits)  
 
     def __str__(self) -> str:
-        return "CZ, control: " + str(self.control) +", target: " + str(self.target)
+        x_pos_control = self.slots[0] % 7
+        y_pos_control = int((self.slots[0] - x_pos_control) / 7)
+        x_pos_target = self.slots[1] % 7
+        y_pos_target = int((self.slots[1] - x_pos_target) / 7)
+        return "CZs: Control=(" + str(x_pos_control) + ", " + str(y_pos_control) + "), Target=(" + str(x_pos_target) + ", " + str(y_pos_target) + ")"
 
     def addToQc(self, qc: QuantumCircuit, mapping_bq: dict[int, int], regs: list[QuantumRegister]):
-        for qReg in regs: qc.cz(qReg[mapping_bq[self.control]], qReg[mapping_bq[self.target]])
+        for qReg in regs: qc.cz(qReg[mapping_bq[self.slots[0]]], qReg[mapping_bq[self.slots[1]]])
 
 class CRX(Gate):
     def __init__(self, angle, qubits: list[int]):
@@ -171,15 +206,17 @@ class CRX(Gate):
             print("CRX gate should affect 2 qubit.")
             return
         super().__init__(qubits)
-        self.control = qubits[0]
-        self.target = qubits[1]
         self.angle = angle     
 
     def __str__(self) -> str:
-        return "CRX, control: " + str(self.control) +", target: " + str(self.target)
+        x_pos_control = self.slots[0] % 7
+        y_pos_control = int((self.slots[0] - x_pos_control) / 7)
+        x_pos_target = self.slots[1] % 7
+        y_pos_target = int((self.slots[1] - x_pos_target) / 7)
+        return "CRX: Control=(" + str(x_pos_control) + ", " + str(y_pos_control) + "), Target=(" + str(x_pos_target) + ", " + str(y_pos_target) + "), Angle=" + str(self.angle)
 
     def addToQc(self, qc: QuantumCircuit, mapping_bq: dict[int, int], regs: list[QuantumRegister]):
-        for qReg in regs: qc.crx(self.angle, qReg[mapping_bq[self.control]], qReg[mapping_bq[self.target]])
+        for qReg in regs: qc.crx(self.angle, qReg[mapping_bq[self.slots[0]]], qReg[mapping_bq[self.slots[1]]])
 
 class CRY(Gate):
     def __init__(self, angle, qubits: list[int]):
@@ -187,20 +224,17 @@ class CRY(Gate):
             print("CRY gate should affect 2 qubit.")
             return
         super().__init__(qubits)
-        self.control = qubits[0]
-        self.target = qubits[1]
         self.angle = angle     
 
     def __str__(self) -> str:
-        c_x_pos = self.control % 7
-        c_y_pos = int((self.control - c_x_pos) / 7)
-        t_x_pos = self.target % 7
-        t_y_pos = int((self.target - t_x_pos) / 7)
-
-        return "CRY: control=(" + str(c_x_pos) + "," + str(c_y_pos) + "), target=" + "(" + str(t_x_pos) + "," + str(t_y_pos) + ")"
+        x_pos_control = self.slots[0] % 7
+        y_pos_control = int((self.slots[0] - x_pos_control) / 7)
+        x_pos_target = self.slots[1] % 7
+        y_pos_target = int((self.slots[1] - x_pos_target) / 7)
+        return "CRY: Control=(" + str(x_pos_control) + ", " + str(y_pos_control) + "), Target=(" + str(x_pos_target) + ", " + str(y_pos_target) + "), Angle=" + str(self.angle)
 
     def addToQc(self, qc: QuantumCircuit, mapping_bq: dict[int, int], regs: list[QuantumRegister]):
-        for qReg in regs: qc.cry(self.angle, qReg[mapping_bq[self.control]], qReg[mapping_bq[self.target]])
+        for qReg in regs: qc.cry(self.angle, qReg[mapping_bq[self.slots[0]]], qReg[mapping_bq[self.slots[1]]])
 
 class CRZ(Gate):
     def __init__(self, angle, qubits: list[int]):
@@ -208,15 +242,17 @@ class CRZ(Gate):
             print("CRZ gate should affect 2 qubit.")
             return
         super().__init__(qubits)
-        self.control = qubits[0]
-        self.target = qubits[1]
         self.angle = angle     
 
     def __str__(self) -> str:
-        return "CRZ, control: " + str(self.control) +", target: " + str(self.target)
+        x_pos_control = self.slots[0] % 7
+        y_pos_control = int((self.slots[0] - x_pos_control) / 7)
+        x_pos_target = self.slots[1] % 7
+        y_pos_target = int((self.slots[1] - x_pos_target) / 7)
+        return "CRZ: Control=(" + str(x_pos_control) + ", " + str(y_pos_control) + "), Target=(" + str(x_pos_target) + ", " + str(y_pos_target) + "), Angle=" + str(self.angle)
 
     def addToQc(self, qc: QuantumCircuit, mapping_bq: dict[int, int], regs: list[QuantumRegister]):
-        for qReg in regs: qc.crz(self.angle, qReg[mapping_bq[self.control]], qReg[mapping_bq[self.target]])
+        for qReg in regs: qc.crz(self.angle, qReg[mapping_bq[self.slots[0]]], qReg[mapping_bq[self.slots[1]]])
 
 class SWAP(Gate):
     def __init__(self, qubits: list[int]):
@@ -226,7 +262,11 @@ class SWAP(Gate):
         super().__init__(qubits)
 
     def __str__(self) -> str:
-        return "SWAP, control: " + str(self.control) +", target: " + str(self.target)
+        x_pos_control = self.slots[0] % 7
+        y_pos_control = int((self.slots[0] - x_pos_control) / 7)
+        x_pos_target = self.slots[1] % 7
+        y_pos_target = int((self.slots[1] - x_pos_target) / 7)
+        return "SWAP: Control=(" + str(x_pos_control) + ", " + str(y_pos_control) + "), Target=(" + str(x_pos_target) + ", " + str(y_pos_target) + ")"
 
     def addToQc(self, qc: QuantumCircuit, mapping_bq: dict[int, int], regs: list[QuantumRegister]):
         for qReg in regs: qc.swap(qReg[mapping_bq[self.slots[0]]], qReg[mapping_bq[self.slots[1]]])
@@ -288,6 +328,9 @@ def generate_seperation(moves: list[Move]) -> list[frozenset[int]]:
     # For each move, union the sets of the qubits it contains
     for move in moves:
         # Find sets containing used qubits
+        if len(move.gate.slots) < 2:
+            continue
+
         sets = list()
         for qubit in move.gate.slots:
             for qubit_set in qubit_set_list:
@@ -332,8 +375,10 @@ def generate_physical_circuit(moves: list[Move], measurement_axes: list[np.array
         cRegs.append(ClassicalRegister(q_num, f"cReg_{index}"))
 
     # Add gates to the circuit
-    qc = QuantumCircuit(*qRegs, *cRegs)
+    qc = QuantumCircuit(*qRegs, *cRegs, ClassicalRegister(1, "useless"))
     for move in moves:
+        if move.collapsed:
+            continue
         move.gate.addToQc(qc, mapping_bq, qRegs)
 
     # Add measurements
@@ -342,6 +387,7 @@ def generate_physical_circuit(moves: list[Move], measurement_axes: list[np.array
         rot_axis /= np.linalg.norm(rot_axis)
         qc.rv(*(rot_axis * np.pi), QuantumRegister(q_num, f"qReg_{index}")) # Add correct rotation to circuit
         qc.measure(QuantumRegister(q_num, f"qReg_{index}"), ClassicalRegister(q_num, f"cReg_{index}"))
+        qc.rv(*(rot_axis * np.pi), QuantumRegister(q_num, f"qReg_{index}")) # Reverse correct rotation to circuit
 
     return (qc, mapping_bq)
 
@@ -389,8 +435,11 @@ def run_moves(moves: list[Move], numShots: int = 1, isPhysical: bool = False) ->
         (qcs, mapping_bq) = generate_simulator_circuits(moves)
         results = list()
 
+        if qcs == [[], [], []]:
+            return tuple([BitArray([]) for i in range(3)], mapping_bq)
+
         # Add a list of all results for each axis to `results` 
         for i in range(3):
-            results.append([run_circuit(qc, numShots*100)[0].data for qc in qcs[i]])
+            results.append([run_circuit(qc, numShots)[0].data for qc in qcs[i]])
 
         return (tuple([BitArray.concatenate_bits([res.cReg_0 for res in axisResults]) for axisResults in results]), mapping_bq)

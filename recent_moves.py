@@ -1,7 +1,7 @@
 import tkinter
 # requires gui package as main python file is outside of package
 from gui.rotation_input import Rotation_input
-from gui.CY_input import CY_input
+from gui.CRY_input import CRY_input
 
 class Recent_moves_list():
     def __init__(self, parent):
