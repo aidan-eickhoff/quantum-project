@@ -2,7 +2,7 @@ import tkinter
 import circuit_generation
 import numpy as np
 
-class CY_input():
+class CRY_input():
     def __init__(self, parent):
         self.container = tkinter.Frame(parent)
 
@@ -14,7 +14,7 @@ class CY_input():
 
         self.angle = tkinter.StringVar()
 
-        self.control_label = tkinter.Label(self.container,text='CY move')
+        self.control_label = tkinter.Label(self.container,text='CRY move')
         self.control_label.grid(row=0,column=0, columnspan=2)
 
         self.control_label = tkinter.Label(self.container,text='Control cell (X,Y)')
