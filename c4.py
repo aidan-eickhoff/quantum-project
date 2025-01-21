@@ -148,17 +148,18 @@ class tkinterHandler():
                                 lowest = row
                                 break
                         # Fill free spots bottom up
-                        for row in range(lowest+1,6):
+                        for row in range(lowest,6):
                             if self.board_state.board[col][row] != 0:
                                 self.board_state.board[col][lowest] = self.board_state.board[col][row]
                                 mapping[7*col + row] = 7*col + lowest
                                 self.board_state.board[col][row] = 0
+                                self.bloch_visualizer.set_color(col, row, 'g')
                                 lowest += 1
 
                     # Apply coloring
                     for col in range(7):
                         for row in range(6):
-                            if self.board_state.board[col][row] == 0:
+                            if self.board_state.board[col][row] <= 0:
                                 continue
                             self.bloch_visualizer.set_collapsed_color(col, row, self.board_state.board[col][row] == 1)
 
