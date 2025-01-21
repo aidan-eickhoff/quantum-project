@@ -150,14 +150,16 @@ class tkinterHandler():
                         for row in range(lowest,6):
                             if self.board_state.board[col][row] != 0:
                                 self.board_state.board[col][lowest] = self.board_state.board[col][row]
-                                mapping[7*col + row] = 7*col + lowest
+                                mapping[7 * row + col] = 7 * lowest + col
                                 self.board_state.board[col][row] = 0
                                 self.bloch_visualizer.set_color(col, row, 'g')
                                 lowest += 1
-
+                    print(self.board_state.board)
+                    print(mapping)
                     # Apply coloring
                     for col in range(7):
                         for row in range(6):
+                            # if self.board_state.board
                             if self.board_state.board[col][row] <= 0:
                                 continue
                             self.bloch_visualizer.set_collapsed_color(col, row, self.board_state.board[col][row] == 1)
@@ -168,7 +170,9 @@ class tkinterHandler():
                             move.collapsed = True
 
                         for i,q in enumerate(move.gate.slots):
+                            print(move.gate)
                             move.gate.slots[i] = mapping[q]
+                            print(move.gate)
                             
         # Rerender the board
         self.update_board(*self.board_state.collapse_event())
