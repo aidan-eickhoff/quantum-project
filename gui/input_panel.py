@@ -44,18 +44,18 @@ class Input_panel():
         self.move_type_control_y = tkinter.Button(self.move_select_container, text='CRY move', command=lambda: self.show_type_input(MoveType.CRY))
         self.move_type_control_y.grid(row=1, column=0, sticky="ew")
         self.move_type_select_buttons.append(self.move_type_control_y)
+        
+        self.move_type_swap = tkinter.Button(self.move_select_container, text='Swap', command=lambda: self.show_type_input(MoveType.SWAP))
+        self.move_type_swap.grid(row=2, column=0, sticky="ew")
+        self.move_type_select_buttons.append(self.move_type_swap)
 
         self.move_type_measure = tkinter.Button(self.move_select_container, text='Measure move', command=lambda: self.show_type_input(MoveType.MEAS))
-        self.move_type_measure.grid(row=2, column=0, sticky="ew")
+        self.move_type_measure.grid(row=3, column=0, sticky="ew")
         self.move_type_select_buttons.append(self.move_type_measure)
 
         self.move_type_collapse = tkinter.Button(self.move_select_container, text='Collapse', command=lambda: self.show_type_input(MoveType.COLLAPSE))
-        self.move_type_collapse.grid(row=3, column=0, sticky="ew")
+        self.move_type_collapse.grid(row=4, column=0, sticky="ew")
         self.move_type_select_buttons.append(self.move_type_collapse)
-
-        self.move_type_swap = tkinter.Button(self.move_select_container, text='Swap', command=lambda: self.show_type_input(MoveType.SWAP))
-        self.move_type_swap.grid(row=4, column=0, sticky="ew")
-        self.move_type_select_buttons.append(self.move_type_swap)
 
         self.move_select_container.grid(row=0, column=0, sticky="ns")
 
