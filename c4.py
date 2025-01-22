@@ -45,12 +45,12 @@ class BoardState():
 
 
     # called to collapse the board up to a target turn -- returns the updated board
-    def collapse_event(self, target_turn: int|None = None) -> tuple[tuple[list[int], list[int], list[int]], dict[int, int]]:
+    def collapse_event(self, target_turn: int|None = None, isPhysical = False) -> tuple[tuple[list[int], list[int], list[int]], dict[int, int]]:
         if target_turn is None:
             target_turn = len(self.moves)
         if target_turn <= self.last_collapsed_move:
             raise Exception("Error, collapsing moves which are already collapsed")
-        return circuit_generation.run_moves(self.moves[self.last_collapsed_move: target_turn], 1000)
+        return circuit_generation.run_moves(self.moves[self.last_collapsed_move: target_turn], 1000, isPhysical=isPhysical)
 
 class tkinterHandler():
     def __init__(self):
@@ -107,7 +107,7 @@ class tkinterHandler():
         # We will be collapsing one qubit and all of its entangled partners, if this is a collapse move
         if isinstance(m.gate, circuit_generation.Coll):
             # Get measurements to collapse with
-            (measurements, mapping_bq) = self.board_state.collapse_event()
+            (measurements, mapping_bq) = self.board_state.collapse_event(isPhysical=False)
             qubit_sets = circuit_generation.generate_seperation(self.board_state.moves)
 
             # Find the set that was affected by our collapse move
@@ -129,10 +129,10 @@ class tkinterHandler():
 
                     # If cell full, red
                     if measZ == 1 and measX == 0:
-                        self.board_state.board[col][row] = 2
+                        self.board_state.board[col][row] = 1
                     # Elif cell full, yellow
                     elif measZ == 1 and measX == 1:
-                        self.board_state.board[col][row] = 1
+                        self.board_state.board[col][row] = 2
                     # Else cell empty
                     else: 
                         self.board_state.board[col][row] = 0
@@ -175,13 +175,12 @@ class tkinterHandler():
                         move.gate.slots[i] = mapping[q]
                             
         # Rerender the board
-        self.update_board(*self.board_state.collapse_event())
+        self.update_board(*self.board_state.collapse_event(isPhysical=False))
 
     def undo_move(self):
         self.board_state.moves.pop()
         self.recent_moves_list.remove_last()
-        self.update_board(*self.board_state.collapse_event())
-
+        self.update_board(*self.board_state.collapse_event(isPhysical=False))
 
     def update_board(self, measurements: tuple[BitArray, BitArray, BitArray], mapping_bq: dict[int, int]):
         qubit_sets: list[frozenset[int]] = circuit_generation.generate_seperation(self.board_state.moves)

@@ -274,9 +274,10 @@ class SWAP(Gate):
 
 # Util functions
 def run_circuit(qc: QuantumCircuit, numShots: int=10, isPhysical: bool=False, hasNoise: bool=False):
+    token = "affdd09c99b2e9d16c7b1e21be72694a881961a3843d1db50702e120ded6da0b598cbbacaca72199787790f93fc1e4bf81f6f1c7585fbd04c9325aacc3854f03"
     # Define which backend to use
     if isPhysical:
-        service = QiskitRuntimeService(channel="ibm_quantum")
+        service = QiskitRuntimeService(channel="ibm_quantum", token=token)
         backend = service.least_busy(operational=True, simulator=False)
     elif hasNoise:
         backend = FakeWashingtonV2()
@@ -425,7 +426,7 @@ def generate_simulator_circuits(moves: list[Move]) -> tuple[list[list[QuantumCir
 def run_moves(moves: list[Move], numShots: int = 1, isPhysical: bool = False) -> tuple[tuple[BitArray, BitArray, BitArray], dict[int, int]]:
     if isPhysical:
         (qc, mapping_bq) = generate_physical_circuit(moves, [Axis.X, Axis.Y, Axis.Z])
-        result = run_circuit(qc, numShots, False) # Change this False to True to run on IBM
+        result = run_circuit(qc, numShots, True) 
         data = result[0].data
         cReg_x = data.cReg_0
         cReg_y = data.cReg_1
