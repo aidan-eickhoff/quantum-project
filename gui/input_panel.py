@@ -33,10 +33,11 @@ class Input_panel():
         self.swap_input.container.pack_forget()
 
         self.backendFrame = tkinter.Frame(self.container, borderwidth=2, relief=tkinter.RIDGE)
-        self.ibmButton = tkinter.Button(self.container, text='IBM', command=lambda: self.setBackend(True, setIsIbm))
-        self.simButton = tkinter.Button(self.container, text='Simulator', command=lambda: self.setBackend(False, setIsIbm))
-        self.ibmButton.grid(row=0, column=0, sticky="ew")
-        self.simButton.grid(row=0, column=1, sticky="ew")
+        self.backendFrame.grid(row=0, columnspan=2, sticky="ns")
+        self.ibmButton = tkinter.Button(self.backendFrame, text='IBM', command=lambda: self.setBackend(True, setIsIbm))
+        self.simButton = tkinter.Button(self.backendFrame, text='Simulator', command=lambda: self.setBackend(False, setIsIbm))
+        self.ibmButton.grid(row=0, column=0, sticky="ns")
+        self.simButton.grid(row=0, column=1, sticky="ns")
         self.simButton["state"] = "disabled"
 
         #switch move buttons
