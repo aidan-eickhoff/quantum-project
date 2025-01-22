@@ -19,3 +19,7 @@ class Recent_moves_list():
         move_num = str(len(self.moves) + 1)
         self.moves.append(move_num + ". " + str(move))
         self.moves_var.set(list(reversed(self.moves)))
+
+    def remove_last(self):
+        self.moves.pop()
+        self.moves_var.set(list(reversed(self.moves)))

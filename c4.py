@@ -64,7 +64,7 @@ class tkinterHandler():
             
         # create drawable canvas
         self.bloch_visualizer = BlochVisualizer(self.main_window)
-        self.input_panel = Input_panel(self.main_window, self.add_move)
+        self.input_panel = Input_panel(self.main_window, self.add_move, self.undo_move)
         self.recent_moves_list = Recent_moves_list(self.main_window)
 
         self.input_panel.container.grid(column=0, row=0, padx= 10)
@@ -175,6 +175,11 @@ class tkinterHandler():
                         move.gate.slots[i] = mapping[q]
                             
         # Rerender the board
+        self.update_board(*self.board_state.collapse_event())
+
+    def undo_move(self):
+        self.board_state.moves.pop()
+        self.recent_moves_list.remove_last()
         self.update_board(*self.board_state.collapse_event())
 
 
