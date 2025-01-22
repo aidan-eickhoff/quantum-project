@@ -15,7 +15,7 @@ class MoveType(Enum):
     COLLAPSE = 'collapse'
 
 class Input_panel():
-    def __init__(self, parent, add_move, undo_move):
+    def __init__(self, parent, add_move, undo_move, rerun):
         self.container = tkinter.Frame(parent, borderwidth=2, relief=tkinter.RIDGE)
 
         self.move_type_container = tkinter.Frame(self.container, borderwidth=2, relief=tkinter.RIDGE, padx=10, pady=5)
@@ -66,6 +66,9 @@ class Input_panel():
         # undo move button
         self.undo_button = tkinter.Button(self.container, text="Undo last move", command=undo_move)
         self.undo_button.grid(row=2, columnspan=2, sticky="ew")
+
+        self.rerun_button = tkinter.Button(self.container, text="Rerun all moves", command=rerun)
+        self.rerun_button.grid(row=3, columnspan=2, sticky="ew")
 
     def clear_input(self):
         for child in self.move_type_container.winfo_children():

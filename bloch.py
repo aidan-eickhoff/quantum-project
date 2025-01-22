@@ -22,6 +22,9 @@ class BlochVisualizer:
         b.frame_width = 0.5
         b.sphere_alpha = 0.1
         b.frame_alpha = 0.05
+        # b.vector_style = '->'
+        b.vector_mutation = 10
+
         b.add_vectors(np.array([0,0,1.1]))
         b.render()
 
@@ -48,4 +51,19 @@ class BlochVisualizer:
         self.spheres[col][row].xlabel = ['', '']
         self.spheres[col][row].ylabel = ['', '']
         self.spheres[col][row].zlabel = ['', '']
+        self.spheres[col][row].render()
+
+    def un_collapse(self, col: int, row: int):
+        self.spheres[col][row].clear()
+        self.spheres[col][row].frame_width = 0.5
+        self.spheres[col][row].sphere_alpha = 0.1
+        self.spheres[col][row].frame_alpha = 0.05
+        self.spheres[col][row].sphere_color = "#FFDDDD" 
+        self.spheres[col][row].vector_color = ['g'] 
+
+        self.spheres[col][row].xlabel = ['$x$', '']
+        self.spheres[col][row].xlabel = ['$y$', '']
+        self.spheres[col][row].zlabel = ['$\\left|0\\right>$', '$\\left|1\\right>$']
+
+        self.spheres[col][row].add_vectors(np.array([0,0,1.1]))
         self.spheres[col][row].render()
