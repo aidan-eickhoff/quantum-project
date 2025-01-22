@@ -18,8 +18,8 @@ class Input_panel():
     def __init__(self, parent, add_move, undo_move):
         self.container = tkinter.Frame(parent, borderwidth=2, relief=tkinter.RIDGE)
 
-        self.move_type_container = tkinter.Frame(self.container, borderwidth=2, relief=tkinter.RIDGE, padx=10,pady=5)
-        self.move_type_container.grid(row=0,column=1)
+        self.move_type_container = tkinter.Frame(self.container, borderwidth=2, relief=tkinter.RIDGE, padx=10, pady=5)
+        self.move_type_container.grid(row=0,column=1, sticky = "ns")
 
         # attributes for the diffrent move inputs, starts with rotate input
         self.rotation_input = Rotation_input(self.move_type_container)
