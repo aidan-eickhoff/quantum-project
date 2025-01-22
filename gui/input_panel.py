@@ -15,11 +15,11 @@ class MoveType(Enum):
     COLLAPSE = 'collapse'
 
 class Input_panel():
-    def __init__(self, parent, add_move, undo_move):
+    def __init__(self, parent, add_move, undo_move, setIsIbm):
         self.container = tkinter.Frame(parent, borderwidth=2, relief=tkinter.RIDGE)
 
         self.move_type_container = tkinter.Frame(self.container, borderwidth=2, relief=tkinter.RIDGE, padx=10, pady=5)
-        self.move_type_container.grid(row=0,column=1, sticky = "ns")
+        self.move_type_container.grid(row=1,column=1, sticky = "ns")
 
         # attributes for the diffrent move inputs, starts with rotate input
         self.rotation_input = Rotation_input(self.move_type_container)
@@ -32,40 +32,47 @@ class Input_panel():
         self.swap_input = Swap_input(self.move_type_container)
         self.swap_input.container.pack_forget()
 
+        self.backendFrame = tkinter.Frame(self.container, borderwidth=2, relief=tkinter.RIDGE)
+        self.ibmButton = tkinter.Button(self.container, text='IBM', command=lambda: self.setBackend(True, setIsIbm))
+        self.simButton = tkinter.Button(self.container, text='Simulator', command=lambda: self.setBackend(False, setIsIbm))
+        self.ibmButton.grid(row=0, column=0, sticky="ew")
+        self.simButton.grid(row=0, column=1, sticky="ew")
+        self.simButton["state"] = "disabled"
+
         #switch move buttons
         self.move_select_container = tkinter.Frame(self.container, borderwidth=2, relief=tkinter.RIDGE)
         self.move_type: MoveType = MoveType.RV
         self.move_type_select_buttons = list()
 
         self.move_type_rotation = tkinter.Button(self.move_select_container, text='rotation move', command=lambda: self.show_type_input(MoveType.RV), state="disabled")
-        self.move_type_rotation.grid(row=0, column=0, sticky="ew")
+        self.move_type_rotation.grid(row=1, column=0, sticky="ew")
         self.move_type_select_buttons.append(self.move_type_rotation)
 
         self.move_type_control_y = tkinter.Button(self.move_select_container, text='CRY move', command=lambda: self.show_type_input(MoveType.CRY))
-        self.move_type_control_y.grid(row=1, column=0, sticky="ew")
+        self.move_type_control_y.grid(row=2, column=0, sticky="ew")
         self.move_type_select_buttons.append(self.move_type_control_y)
         
         self.move_type_swap = tkinter.Button(self.move_select_container, text='Swap', command=lambda: self.show_type_input(MoveType.SWAP))
-        self.move_type_swap.grid(row=2, column=0, sticky="ew")
+        self.move_type_swap.grid(row=3, column=0, sticky="ew")
         self.move_type_select_buttons.append(self.move_type_swap)
 
         self.move_type_measure = tkinter.Button(self.move_select_container, text='Measure move', command=lambda: self.show_type_input(MoveType.MEAS))
-        self.move_type_measure.grid(row=3, column=0, sticky="ew")
+        self.move_type_measure.grid(row=4, column=0, sticky="ew")
         self.move_type_select_buttons.append(self.move_type_measure)
 
         self.move_type_collapse = tkinter.Button(self.move_select_container, text='Collapse', command=lambda: self.show_type_input(MoveType.COLLAPSE))
-        self.move_type_collapse.grid(row=4, column=0, sticky="ew")
+        self.move_type_collapse.grid(row=5, column=0, sticky="ew")
         self.move_type_select_buttons.append(self.move_type_collapse)
 
-        self.move_select_container.grid(row=0, column=0, sticky="ns")
+        self.move_select_container.grid(row=1, column=0, sticky="ns")
 
         #submit_move button
         self.submit_button = tkinter.Button(self.container, text='Play move', command=add_move)
-        self.submit_button.grid(row=1, columnspan=2, sticky="ew")
+        self.submit_button.grid(row=2, columnspan=2, sticky="ew")
 
         # undo move button
         self.undo_button = tkinter.Button(self.container, text="Undo last move", command=undo_move)
-        self.undo_button.grid(row=2, columnspan=2, sticky="ew")
+        self.undo_button.grid(row=3, columnspan=2, sticky="ew")
 
     def clear_input(self):
         for child in self.move_type_container.winfo_children():
@@ -107,3 +114,12 @@ class Input_panel():
                 return self.measure_input.get_move()
             case MoveType.COLLAPSE:
                 return self.collapse_input.get_move()
+            
+    def setBackend(self, isIBM, setIsIbm):
+        if isIBM:
+            self.ibmButton["state"] = "disabled"
+            self.simButton["state"] = "normal"
+        else:
+            self.ibmButton["state"] = "normal"
+            self.simButton["state"] = "disabled"
+        setIsIbm(isIBM)

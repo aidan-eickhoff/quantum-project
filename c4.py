@@ -61,10 +61,12 @@ class tkinterHandler():
             self.main_window.update()
         else:
             self.main_window.state('zoomed')
+
+        self.useIBM = False
             
         # create drawable canvas
         self.bloch_visualizer = BlochVisualizer(self.main_window)
-        self.input_panel = Input_panel(self.main_window, self.add_move, self.undo_move)
+        self.input_panel = Input_panel(self.main_window, self.add_move, self.undo_move, self.setIsIbm)
         self.recent_moves_list = Recent_moves_list(self.main_window)
 
         self.input_panel.container.grid(column=0, row=0, padx= 10)
@@ -86,6 +88,8 @@ class tkinterHandler():
     def show_window(self):
         self.main_window.mainloop()
 
+    def setIsIbm(self, isIbm):
+        self.useIBM = isIbm
 
     # submit button click calls this method
     def add_move(self):
@@ -107,7 +111,7 @@ class tkinterHandler():
         # We will be collapsing one qubit and all of its entangled partners, if this is a collapse move
         if isinstance(m.gate, circuit_generation.Coll):
             # Get measurements to collapse with
-            (measurements, mapping_bq) = self.board_state.collapse_event(isPhysical=False)
+            (measurements, mapping_bq) = self.board_state.collapse_event(isPhysical=self.useIBM)
             qubit_sets = circuit_generation.generate_seperation(self.board_state.moves)
 
             # Find the set that was affected by our collapse move
@@ -175,12 +179,12 @@ class tkinterHandler():
                         move.gate.slots[i] = mapping[q]
                             
         # Rerender the board
-        self.update_board(*self.board_state.collapse_event(isPhysical=False))
+        self.update_board(*self.board_state.collapse_event(isPhysical=self.useIBM))
 
     def undo_move(self):
         self.board_state.moves.pop()
         self.recent_moves_list.remove_last()
-        self.update_board(*self.board_state.collapse_event(isPhysical=False))
+        self.update_board(*self.board_state.collapse_event(isPhysical=self.useIBM))
 
     def update_board(self, measurements: tuple[BitArray, BitArray, BitArray], mapping_bq: dict[int, int]):
         qubit_sets: list[frozenset[int]] = circuit_generation.generate_seperation(self.board_state.moves)
