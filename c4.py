@@ -61,10 +61,12 @@ class tkinterHandler():
             self.main_window.update()
         else:
             self.main_window.state('zoomed')
+
+        self.useIBM = False
             
         # create drawable canvas
         self.bloch_visualizer = BlochVisualizer(self.main_window)
-        self.input_panel = Input_panel(self.main_window, self.add_move, self.undo_move, self.rerun_all_moves)
+        self.input_panel = Input_panel(self.main_window, self.add_move, self.undo_move, self.rerun_all_moves, self.setIsIbm)
         self.recent_moves_list = Recent_moves_list(self.main_window)
 
         self.input_panel.container.grid(column=0, row=0, padx= 10)
@@ -86,6 +88,8 @@ class tkinterHandler():
     def show_window(self):
         self.main_window.mainloop()
 
+    def setIsIbm(self, isIbm):
+        self.useIBM = isIbm
 
     # submit button click calls this method
     def add_move(self):
@@ -108,12 +112,12 @@ class tkinterHandler():
         if isinstance(m.gate, circuit_generation.Coll):
             self.collapse_move_behavior(m)
         # Rerender the board
-        self.update_board(*self.board_state.collapse_event(isPhysical=False))
+        self.update_board(*self.board_state.collapse_event(isPhysical=self.useIBM))
 
     def undo_move(self):
         self.board_state.moves.pop()
         self.recent_moves_list.remove_last()
-        self.update_board(*self.board_state.collapse_event(isPhysical=False))
+        self.update_board(*self.board_state.collapse_event(isPhysical=self.useIBM))
 
     def rerun_all_moves(self):
         # reset all bloch spheres
@@ -154,7 +158,7 @@ class tkinterHandler():
 
     def collapse_move_behavior(self, m: circuit_generation.Move):
         # Get measurements to collapse with
-        (measurements, mapping_bq) = self.board_state.collapse_event(isPhysical=False)
+        (measurements, mapping_bq) = self.board_state.collapse_event(isPhysical=self.useIBM)
         qubit_sets = circuit_generation.generate_seperation(self.board_state.moves)
 
         # Find the set that was affected by our collapse move
