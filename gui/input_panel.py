@@ -76,7 +76,7 @@ class Input_panel():
         self.undo_button.grid(row=3, columnspan=2, sticky="ew")
 
         self.rerun_button = tkinter.Button(self.container, text="Rerun all moves", command=rerun)
-        self.rerun_button.grid(row=3, columnspan=2, sticky="ew")
+        self.rerun_button.grid(row=4, columnspan=2, sticky="ew")
 
     def clear_input(self):
         for child in self.move_type_container.winfo_children():
