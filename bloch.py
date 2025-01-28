@@ -62,7 +62,7 @@ class BlochVisualizer:
         self.spheres[col][row].vector_color = ['g'] 
 
         self.spheres[col][row].xlabel = ['$x$', '']
-        self.spheres[col][row].xlabel = ['$y$', '']
+        self.spheres[col][row].ylabel = ['$y$', '']
         self.spheres[col][row].zlabel = ['$\\left|0\\right>$', '$\\left|1\\right>$']
 
         self.spheres[col][row].add_vectors(np.array([0,0,1.1]))
