@@ -329,7 +329,7 @@ def generate_seperation(moves: list[Move]) -> list[frozenset[int]]:
     # For each move, union the sets of the qubits it contains
     for move in moves:
         # Find sets containing used qubits
-        if len(move.gate.slots) < 2:
+        if len(move.gate.slots) < 2 or move.collapsed:
             continue
 
         sets = list()
